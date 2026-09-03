@@ -1,0 +1,64 @@
+charge_now:
+  name: Charge now
+  description: Allow the car to charge whenever it is plugged in.
+  fields:
+    vin:
+      name: VIN
+      description: Which vehicle (optional if you have only one).
+      example: "L..."
+      selector: { text: {} }
+    until_soc:
+      name: Until target SoC
+      description: Charge until the target state of charge instead of a stop time.
+      selector: { boolean: {} }
+
+charge_pause:
+  name: Pause charging
+  description: Gate charging off until the next charge-now or window.
+  fields:
+    vin:
+      name: VIN
+      description: Which vehicle (optional if you have only one).
+      selector: { text: {} }
+
+set_charge_window:
+  name: Set charge window
+  description: Charge only inside a daily time window.
+  fields:
+    vin:
+      name: VIN
+      selector: { text: {} }
+    start:
+      name: Start (HH:MM)
+      required: true
+      example: "23:00"
+      selector: { text: {} }
+    stop:
+      name: Stop (HH:MM)
+      required: true
+      example: "05:00"
+      selector: { text: {} }
+    weekly:
+      name: Day bitmask
+      description: "Optional. Mon=1, Tue=2, Wed=4 … Sun=64; 0 = every day."
+      selector: { number: { min: 0, max: 127, mode: box } }
+    until_soc:
+      name: Until target SoC
+      selector: { boolean: {} }
+
+send_command:
+  name: Send command
+  description: Send a supported vehicle command by name (advanced).
+  fields:
+    vin:
+      name: VIN
+      selector: { text: {} }
+    command:
+      name: Command
+      required: true
+      example: aircon-on
+      selector: { text: {} }
+    params:
+      name: Parameters
+      description: Optional command overrides as a mapping.
+      selector: { object: {} }

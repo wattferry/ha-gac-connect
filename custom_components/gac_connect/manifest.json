@@ -1,0 +1,14 @@
+{
+  "domain": "gac_connect",
+  "name": "GAC Connect (unofficial)",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://github.com/OWNER/ha-gac-connect",
+  "issue_tracker": "https://github.com/OWNER/ha-gac-connect/issues",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "after_dependencies": ["http"],
+  "loggers": ["gac_connect"],
+  "requirements": ["gac-connect==0.1.0"],
+  "version": "0.1.0"
+}
