@@ -12,7 +12,15 @@
 #      (To instead ADD to an existing dashboard, copy just the `- type: sections`
 #      block below into that dashboard's `views:` list.)
 #
-# Everything below uses built-in cards (gauge, tile, entities, grid, heading).
+# TYRE PRESSURE IN PSI: the car reports kPa; to see psi, open a tyre sensor →
+# settings (gear) → Unit of measurement → psi. Home Assistant converts it.
+#
+# LOCATION MAP: enable the tracker first (Settings → Devices & Services →
+# GAC Connect → Configure → Enable location tracking), then uncomment the map
+# card in the "Location & status" section below.
+#
+# Everything below uses built-in cards (gauge, tile, entities, grid, heading,
+# history-graph, map).
 
 views:
   - title: Car
@@ -72,6 +80,19 @@ views:
                 entity: button.aion_v_refresh
                 name: Refresh
                 tap_action: { action: toggle }
+          - type: history-graph
+            title: Battery (24h)
+            hours_to_show: 24
+            entities:
+              - sensor.aion_v_battery
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.aion_v_charging
+                state: "on"
+            card:
+              type: tile
+              entity: sensor.aion_v_charge_current
+              name: Charging at
 
       - type: grid
         cards:
@@ -100,6 +121,20 @@ views:
               - type: tile
                 entity: sensor.aion_v_12v_battery
                 name: 12V
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Location & status
+            icon: mdi:map-marker
+          - type: tile
+            entity: binary_sensor.aion_v_online
+            name: Online
+          # Uncomment once location tracking is enabled (see header):
+          # - type: map
+          #   entities:
+          #     - device_tracker.aion_v_location
+          #   hours_to_show: 0
 
       - type: grid
         cards:
