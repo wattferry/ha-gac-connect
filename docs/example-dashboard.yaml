@@ -15,9 +15,9 @@
 # TYRE PRESSURE IN PSI: the car reports kPa; to see psi, open a tyre sensor →
 # settings (gear) → Unit of measurement → psi. Home Assistant converts it.
 #
-# LOCATION MAP: enable the tracker first (Settings → Devices & Services →
-# GAC Connect → Configure → Enable location tracking), then uncomment the map
-# card in the "Location & status" section below.
+# LOCATION MAP: the map card needs the location tracker. Turn it on in
+# Settings → Devices & Services → GAC Connect → Configure → Enable location
+# tracking. Until then, remove the map card or it shows nothing.
 #
 # Everything below uses built-in cards (gauge, tile, entities, grid, heading,
 # history-graph, map).
@@ -85,6 +85,11 @@ views:
             hours_to_show: 24
             entities:
               - sensor.aion_v_battery
+          - type: history-graph
+            title: Range (24h)
+            hours_to_show: 24
+            entities:
+              - sensor.aion_v_range
           - type: conditional
             conditions:
               - entity: binary_sensor.aion_v_charging
@@ -130,11 +135,10 @@ views:
           - type: tile
             entity: binary_sensor.aion_v_online
             name: Online
-          # Uncomment once location tracking is enabled (see header):
-          # - type: map
-          #   entities:
-          #     - device_tracker.aion_v_location
-          #   hours_to_show: 0
+          - type: map
+            entities:
+              - device_tracker.aion_v_location
+            hours_to_show: 0
 
       - type: grid
         cards:
