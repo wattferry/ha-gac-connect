@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from gac_connect.client import GacClient
+if TYPE_CHECKING:
+    from gac_connect.client import GacClient
+
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,6 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_REGION, PLATFORMS
 from .coordinator import ConfigEntryStore, GacCoordinator
+from .helpers import async_build_client
 
 type GacConfigEntry = ConfigEntry[GacRuntime]
 
@@ -24,7 +28,7 @@ class GacRuntime:
 async def async_setup_entry(hass: HomeAssistant, entry: GacConfigEntry) -> bool:
     # Isolated session: this login's cookies must not mix with other integrations.
     http = async_create_clientsession(hass)
-    client = GacClient(entry.data[CONF_REGION], http, ConfigEntryStore(hass, entry))
+    client = await async_build_client(hass, entry.data[CONF_REGION], http, ConfigEntryStore(hass, entry))
     await client.load()
 
     coordinator = GacCoordinator(hass, entry, client)

@@ -5,17 +5,19 @@ reconfigure changes region/vehicle; options tune polling and privacy.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gac_connect.client import GacClient
 
 import voluptuous as vol
-from gac_connect.client import GacClient
 from gac_connect.errors import GacError, LoginError
 
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithReload,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_REGION
 from homeassistant.core import callback
@@ -23,6 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.network import get_url
 
 from .captcha_view import CAPTCHA_URL, GacCaptchaView, flow_state
+from .helpers import async_build_client
 from .const import (
     CONF_ENABLE_TRACKER,
     CONF_MOBILE,
@@ -58,7 +61,7 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
             self._mobile = user_input[CONF_MOBILE]
             try:
                 http = async_create_clientsession(self.hass)
-                self._client = GacClient(self._region, http)
+                self._client = await async_build_client(self.hass, self._region, http)
                 await self._client.start_captcha()
             except GacError:
                 errors["base"] = "cannot_connect"
@@ -74,8 +77,10 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_captcha(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         # Resumed by the captcha view once the puzzle is solved and SMS is sent.
         if user_input is not None:
+            # An external step may only transition to an external-step-done, which
+            # then hands off to the SMS step.
             flow_state(self.hass).pop(self.flow_id, None)
-            return await self.async_step_sms()
+            return self.async_external_step_done(next_step_id="sms")
 
         if not self._view_registered:
             self.hass.http.register_view(GacCaptchaView())
@@ -145,7 +150,7 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         http = async_create_clientsession(self.hass)
-        self._client = GacClient(self._region, http)
+        self._client = await async_build_client(self.hass, self._region, http)
         await self._client.start_captcha()
         return await self.async_step_captcha()
 
@@ -155,7 +160,7 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
         return GacOptionsFlow()
 
 
-class GacOptionsFlow(OptionsFlowWithReload):
+class GacOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             return self.async_create_entry(data=user_input)

@@ -1,7 +1,7 @@
 """Base entity: one device per VIN, coordinator-driven."""
 from __future__ import annotations
 
-from homeassistant.helpers.device_info import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_MODEL, DOMAIN

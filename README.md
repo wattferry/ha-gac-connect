@@ -37,6 +37,13 @@ door / window / boot, lock and online as binary sensors; a location tracker
 (off by default — enable it in the integration's options); buttons for charge
 now / pause / refresh; and a scheduled-charging switch.
 
+## Example dashboard
+
+A ready-made car view using only built-in cards (no extra installs) is in
+[`docs/example-dashboard.yaml`](docs/example-dashboard.yaml). Replace the
+`aion_v` entity prefix with your vehicle's, then paste it as a new view via
+Dashboards → Edit → Raw configuration editor.
+
 ## Services
 
 `gac_connect.charge_now`, `charge_pause`, `set_charge_window`, and `send_command`
