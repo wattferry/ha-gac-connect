@@ -6,10 +6,16 @@ odometer, charging, doors and windows, tyres, and charge control.
 > Not affiliated with, endorsed by, or supported by GAC. Use it with a vehicle
 > you own, on your own account.
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wattferry&repository=ha-gac-connect&category=integration)
+
+
 Verified for **Australia and New Zealand**. Other regions appear in the list but
 are unverified.
 
 ## Install (HACS)
+
+Click the badge above for one-click add, or add it manually:
+
 
 1. HACS → three-dot menu → **Custom repositories**.
 2. Add this repository, category **Integration**.
