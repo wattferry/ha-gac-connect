@@ -40,9 +40,9 @@ now / pause / refresh; and a scheduled-charging switch.
 ## Example dashboard
 
 A ready-made car view using only built-in cards (no extra installs) is in
-[`docs/example-dashboard.yaml`](docs/example-dashboard.yaml). Replace the
-`aion_v` entity prefix with your vehicle's, then paste it as a new view via
-Dashboards → Edit → Raw configuration editor.
+[`docs/example-dashboard.yaml`](docs/example-dashboard.yaml). Replace the `aion_v`
+entity prefix with your vehicle's, then paste the whole file into a new
+dashboard via Dashboards → Add Dashboard → Edit → Raw configuration editor.
 
 ## Services
 

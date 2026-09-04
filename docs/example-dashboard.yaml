@@ -6,118 +6,123 @@
 #      `aion_v` (an "AION V"). If yours differ, find-and-replace `aion_v` with
 #      your prefix — check Settings → Devices & Services → GAC Connect → the
 #      device, or Developer Tools → States (filter "gac" or your model).
-#   2. Dashboards → three-dot menu → Edit → three-dot menu → Raw configuration
-#      editor → paste this as a new view (under `views:`).
+#   2. On a NEW empty dashboard: Dashboards → + Add Dashboard → New dashboard
+#      → open it → three-dot menu → Edit → three-dot menu → Raw configuration
+#      editor → replace everything with this file.
+#      (To instead ADD to an existing dashboard, copy just the `- type: sections`
+#      block below into that dashboard's `views:` list.)
 #
 # Everything below uses built-in cards (gauge, tile, entities, grid, heading).
 
-title: Car
-path: car
-icon: mdi:car-electric
-type: sections
-max_columns: 2
-sections:
-  - type: grid
-    cards:
-      - type: heading
-        heading: Battery & charging
-        icon: mdi:ev-station
-      - type: gauge
-        entity: sensor.aion_v_battery
-        name: State of charge
-        needle: true
-        severity:
-          green: 60
-          yellow: 30
-          red: 0
+views:
+  - title: Car
+    path: car
+    icon: mdi:car-electric
+    type: sections
+    max_columns: 2
+    sections:
       - type: grid
-        columns: 2
-        square: false
         cards:
-          - type: tile
-            entity: sensor.aion_v_range
-            name: Range
-          - type: tile
-            entity: sensor.aion_v_odometer
-            name: Odometer
-          - type: tile
-            entity: binary_sensor.aion_v_plugged_in
-            name: Plug
-          - type: tile
-            entity: binary_sensor.aion_v_charging
-            name: Charging
-          - type: tile
-            entity: sensor.aion_v_estimated_charge_time
-            name: Charge time
-          - type: tile
-            entity: switch.aion_v_scheduled_charging
-            name: Scheduled charge
-      - type: grid
-        columns: 3
-        square: false
-        cards:
-          - type: tile
-            entity: button.aion_v_charge_now
-            name: Charge now
-            tap_action: { action: toggle }
-          - type: tile
-            entity: button.aion_v_pause_charging
-            name: Pause
-            tap_action: { action: toggle }
-          - type: tile
-            entity: button.aion_v_refresh
-            name: Refresh
-            tap_action: { action: toggle }
+          - type: heading
+            heading: Battery & charging
+            icon: mdi:ev-station
+          - type: gauge
+            entity: sensor.aion_v_battery
+            name: State of charge
+            needle: true
+            severity:
+              green: 60
+              yellow: 30
+              red: 0
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: tile
+                entity: sensor.aion_v_range
+                name: Range
+              - type: tile
+                entity: sensor.aion_v_odometer
+                name: Odometer
+              - type: tile
+                entity: binary_sensor.aion_v_plugged_in
+                name: Plug
+              - type: tile
+                entity: binary_sensor.aion_v_charging
+                name: Charging
+              - type: tile
+                entity: sensor.aion_v_estimated_charge_time
+                name: Charge time
+              - type: tile
+                entity: switch.aion_v_scheduled_charging
+                name: Scheduled charge
+          - type: grid
+            columns: 3
+            square: false
+            cards:
+              - type: tile
+                entity: button.aion_v_charge_now
+                name: Charge now
+                tap_action: { action: toggle }
+              - type: tile
+                entity: button.aion_v_pause_charging
+                name: Pause
+                tap_action: { action: toggle }
+              - type: tile
+                entity: button.aion_v_refresh
+                name: Refresh
+                tap_action: { action: toggle }
 
-  - type: grid
-    cards:
-      - type: heading
-        heading: Security & climate
-        icon: mdi:shield-car
       - type: grid
-        columns: 2
-        square: false
         cards:
-          - type: tile
-            entity: binary_sensor.aion_v_lock
-            name: Locks
-          - type: tile
-            entity: binary_sensor.aion_v_door
-            name: Doors
-          - type: tile
-            entity: binary_sensor.aion_v_window
-            name: Windows
-          - type: tile
-            entity: binary_sensor.aion_v_boot
-            name: Boot
-          - type: tile
-            entity: sensor.aion_v_cabin_temperature
-            name: Cabin
-          - type: tile
-            entity: sensor.aion_v_12v_battery
-            name: 12V
+          - type: heading
+            heading: Security & climate
+            icon: mdi:shield-car
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: tile
+                entity: binary_sensor.aion_v_lock
+                name: Locks
+              - type: tile
+                entity: binary_sensor.aion_v_door
+                name: Doors
+              - type: tile
+                entity: binary_sensor.aion_v_window
+                name: Windows
+              - type: tile
+                entity: binary_sensor.aion_v_boot
+                name: Boot
+              - type: tile
+                entity: sensor.aion_v_cabin_temperature
+                name: Cabin
+              - type: tile
+                entity: sensor.aion_v_12v_battery
+                name: 12V
 
-  - type: grid
-    cards:
-      - type: heading
-        heading: Tyres
-        icon: mdi:car-tire-alert
-      - type: entities
-        entities:
-          - entity: sensor.aion_v_tyre_1_pressure
-            name: Front left
-            secondary_info: last-updated
-          - entity: sensor.aion_v_tyre_2_pressure
-            name: Front right
-          - entity: sensor.aion_v_tyre_3_pressure
-            name: Rear left
-          - entity: sensor.aion_v_tyre_4_pressure
-            name: Rear right
-      - type: history-graph
-        title: Tyre pressure (24h)
-        hours_to_show: 24
-        entities:
-          - sensor.aion_v_tyre_1_pressure
-          - sensor.aion_v_tyre_2_pressure
-          - sensor.aion_v_tyre_3_pressure
-          - sensor.aion_v_tyre_4_pressure
+      - type: grid
+        cards:
+          - type: heading
+            heading: Tyres
+            icon: mdi:car-tire-alert
+          - type: entities
+            entities:
+              - entity: sensor.aion_v_tyre_1_pressure
+                name: Front left
+                secondary_info: last-updated
+              - entity: sensor.aion_v_tyre_2_pressure
+                name: Front right
+              - entity: sensor.aion_v_tyre_3_pressure
+                name: Rear left
+              - entity: sensor.aion_v_tyre_4_pressure
+                name: Rear right
+          - type: history-graph
+            title: Tyre pressure (24h)
+            hours_to_show: 24
+            entities:
+              - sensor.aion_v_tyre_1_pressure
+              - sensor.aion_v_tyre_2_pressure
+              - sensor.aion_v_tyre_3_pressure
+              - sensor.aion_v_tyre_4_pressure
+
