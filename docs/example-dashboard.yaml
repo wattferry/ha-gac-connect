@@ -15,7 +15,8 @@
 # Devices & Services → GAC Connect → Configure → Enable location tracking.
 # If it is off, delete the Location section or the map shows nothing.
 #
-# Layout: `type: sections` with 3 columns. Each section is small so Home
+# Layout: `type: sections` with 3 columns. Remove the Controls section (or any
+# card in it) if you do not want remote commands on the dashboard. Each section is small so Home
 # Assistant balances them; on a narrow screen they stack automatically.
 
 views:
@@ -91,6 +92,33 @@ views:
             entities:
               - entity: sensor.aion_v_range
                 name: Range
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Controls
+            icon: mdi:car-cog
+          - type: thermostat
+            entity: climate.aion_v_climate
+            name: Pre-conditioning
+          - type: tile
+            entity: lock.aion_v_doors
+            name: Doors
+            # tap → more-info → Lock. (Unlock needs the unsupported PIN.)
+          - type: tile
+            entity: cover.aion_v_windows
+            name: Windows
+            features:
+              - type: cover-open-close
+          - type: tile
+            entity: switch.aion_v_steering_wheel_heat
+            name: Steering heat
+          - type: tile
+            entity: switch.aion_v_ventilation
+            name: Ventilation
+          - type: tile
+            entity: button.aion_v_flash_lights
+            name: Flash lights
 
       - type: grid
         cards:

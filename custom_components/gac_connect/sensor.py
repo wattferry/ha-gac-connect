@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from gac_connect.models import VehicleStatus
 
@@ -13,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -59,6 +61,21 @@ SENSORS: tuple[GacSensor, ...] = (
               native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
               state_class=SensorStateClass.MEASUREMENT, entity_category=EntityCategory.DIAGNOSTIC,
               value=lambda s: s.charge_current_a),
+    GacSensor(key="pm25", translation_key="pm25", device_class=SensorDeviceClass.PM25,
+              native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+              state_class=SensorStateClass.MEASUREMENT, entity_category=EntityCategory.DIAGNOSTIC,
+              value=lambda s: s.pm25),
+    GacSensor(key="last_report", translation_key="last_report", device_class=SensorDeviceClass.TIMESTAMP,
+              entity_category=EntityCategory.DIAGNOSTIC,
+              value=lambda s: datetime.fromtimestamp(s.updated_ms / 1000, tz=UTC) if s.updated_ms else None),
+    # The reservation window as the car's service reports it. Its clock does not
+    # necessarily match local time, so these are off by default.
+    GacSensor(key="charge_window_start", translation_key="charge_window_start", icon="mdi:clock-start",
+              entity_category=EntityCategory.DIAGNOSTIC, entity_registry_enabled_default=False,
+              value=lambda s: s.charge_window_start),
+    GacSensor(key="charge_window_stop", translation_key="charge_window_stop", icon="mdi:clock-end",
+              entity_category=EntityCategory.DIAGNOSTIC, entity_registry_enabled_default=False,
+              value=lambda s: s.charge_window_stop),
 )
 
 

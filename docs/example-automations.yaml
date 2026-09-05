@@ -1,0 +1,91 @@
+# Example alerts for a GAC Connect vehicle. Paste into automations.yaml (or
+# recreate in the UI). Replace `aion_v` with your vehicle's entity prefix and
+# `notify.notify` with your phone's notify action (e.g. notify.mobile_app_my_phone).
+#
+# The car reports every poll (default 5 min), so `for:` waits are in whole polls.
+#
+# The thresholds below are illustrative only. Replace them with the values your
+# vehicle's manufacturer specifies (tyre placard, battery documentation). These
+# alerts depend on a cloud service and a polling integration; they are a
+# convenience, not a safety system.
+
+- id: gac_tyre_pressure_low
+  alias: "Car: low tyre pressure"
+  description: Any tyre under 35 psi (~240 kPa) for 30 min.
+  mode: queued
+  trigger:
+    - platform: numeric_state
+      entity_id:
+        - sensor.aion_v_tyre_1_pressure
+        - sensor.aion_v_tyre_2_pressure
+        - sensor.aion_v_tyre_3_pressure
+        - sensor.aion_v_tyre_4_pressure
+      below: 240          # kPa; use 35 if you set the sensors to display psi
+      for: { minutes: 30 }
+  action:
+    - action: notify.notify
+      data:
+        title: Car tyre pressure low
+        message: >-
+          {{ state_attr(trigger.entity_id, 'friendly_name') }} is at
+          {{ trigger.to_state.state }} {{ trigger.to_state.attributes.unit_of_measurement }}.
+          Check it before driving.
+
+- id: gac_12v_battery_low
+  alias: "Car: 12V battery low"
+  description: Resting 12 V below 12.0 V for 30 min (charging lifts it to ~14 V).
+  mode: single
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.aion_v_12v_battery
+      below: 12.0
+      for: { minutes: 30 }
+  action:
+    - action: notify.notify
+      data:
+        title: Car 12V battery low
+        message: "Auxiliary battery at {{ states('sensor.aion_v_12v_battery') }} V."
+
+- id: gac_car_unlocked_at_home
+  alias: "Car: left unlocked at home"
+  description: Unlocked for 20 min while parked at home (needs the location tracker enabled).
+  mode: single
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.aion_v_lock   # on = unlocked
+      to: "on"
+      for: { minutes: 20 }
+  condition:
+    - condition: state
+      entity_id: device_tracker.aion_v_location
+      state: home
+  action:
+    - action: notify.notify
+      data:
+        title: Car is unlocked
+        message: The car has been unlocked at home for 20 minutes.
+    # Or lock it instead:
+    # - action: lock.lock
+    #   target: { entity_id: lock.aion_v_doors }
+
+- id: gac_car_left_open
+  alias: "Car: door, window or boot left open"
+  description: Anything open for 15 min while at home.
+  mode: queued
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.aion_v_door
+        - binary_sensor.aion_v_window
+        - binary_sensor.aion_v_boot
+      to: "on"
+      for: { minutes: 15 }
+  condition:
+    - condition: state
+      entity_id: device_tracker.aion_v_location
+      state: home
+  action:
+    - action: notify.notify
+      data:
+        title: Car left open
+        message: "{{ state_attr(trigger.entity_id, 'friendly_name') }} has been open for 15 minutes."

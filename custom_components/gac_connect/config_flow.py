@@ -27,6 +27,7 @@ from homeassistant.helpers.network import get_url
 from .captcha_view import CAPTCHA_URL, GacCaptchaView, flow_state
 from .helpers import async_build_client
 from .const import (
+    CONF_AC_MINUTES,
     CONF_ENABLE_TRACKER,
     CONF_MOBILE,
     CONF_MODEL,
@@ -36,6 +37,7 @@ from .const import (
     CONF_SESSION,
     CONF_VIN,
     DEFAULT_ENABLE_TRACKER,
+    DEFAULT_AC_MINUTES,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MIN_SCAN_INTERVAL,
@@ -173,5 +175,7 @@ class GacOptionsFlow(OptionsFlow):
                          default=opts.get(CONF_ENABLE_TRACKER, DEFAULT_ENABLE_TRACKER)): bool,
             vol.Optional(CONF_QUIET_START, default=opts.get(CONF_QUIET_START, "")): str,
             vol.Optional(CONF_QUIET_END, default=opts.get(CONF_QUIET_END, "")): str,
+            vol.Optional(CONF_AC_MINUTES, default=opts.get(CONF_AC_MINUTES, DEFAULT_AC_MINUTES)):
+                vol.All(vol.Coerce(int), vol.Range(min=5, max=60)),
         })
         return self.async_show_form(step_id="init", data_schema=schema)

@@ -3,17 +3,24 @@
     "step": {
       "user": {
         "title": "GAC Connect",
-        "description": "Sign in with the mobile number on your GAC account. You'll solve a slide puzzle and enter a code sent by SMS.",
-        "data": { "region": "Region", "mobile": "Mobile number" }
+        "description": "Beta: unofficial, with limited testing. Remote commands act on your vehicle; use at your own risk. Sign in with the mobile number on your GAC account. You'll solve a slide puzzle and enter a code sent by SMS.",
+        "data": {
+          "region": "Region",
+          "mobile": "Mobile number"
+        }
       },
       "sms": {
         "title": "Enter the SMS code",
         "description": "Enter the code just sent to your phone.",
-        "data": { "code": "SMS code" }
+        "data": {
+          "code": "SMS code"
+        }
       },
       "vehicle": {
         "title": "Choose your vehicle",
-        "data": { "vin": "Vehicle" }
+        "data": {
+          "vin": "Vehicle"
+        }
       },
       "reauth_confirm": {
         "title": "Sign in again",
@@ -40,48 +47,151 @@
           "scan_interval": "Poll interval (seconds)",
           "enable_tracker": "Enable location tracking",
           "quiet_start": "Quiet hours start (HH:MM, optional)",
-          "quiet_end": "Quiet hours end (HH:MM, optional)"
+          "quiet_end": "Quiet hours end (HH:MM, optional)",
+          "ac_minutes": "A/C run time (minutes)"
         }
       }
     }
   },
   "entity": {
     "sensor": {
-      "soc": { "name": "Battery" },
-      "range": { "name": "Range" },
-      "odometer": { "name": "Odometer" },
-      "cabin_temp": { "name": "Cabin temperature" },
-      "aux_voltage": { "name": "12V battery" },
-      "charge_time": { "name": "Estimated charge time" },
-      "charge_current": { "name": "Charge current" },
-      "tyre_1_pressure": { "name": "Tyre 1 pressure" },
-      "tyre_1_temp": { "name": "Tyre 1 temperature" },
-      "tyre_2_pressure": { "name": "Tyre 2 pressure" },
-      "tyre_2_temp": { "name": "Tyre 2 temperature" },
-      "tyre_3_pressure": { "name": "Tyre 3 pressure" },
-      "tyre_3_temp": { "name": "Tyre 3 temperature" },
-      "tyre_4_pressure": { "name": "Tyre 4 pressure" },
-      "tyre_4_temp": { "name": "Tyre 4 temperature" }
+      "soc": {
+        "name": "Battery"
+      },
+      "range": {
+        "name": "Range"
+      },
+      "odometer": {
+        "name": "Odometer"
+      },
+      "cabin_temp": {
+        "name": "Cabin temperature"
+      },
+      "aux_voltage": {
+        "name": "12V battery"
+      },
+      "charge_time": {
+        "name": "Estimated charge time"
+      },
+      "charge_current": {
+        "name": "Charge current"
+      },
+      "tyre_1_pressure": {
+        "name": "Tyre 1 pressure"
+      },
+      "tyre_1_temp": {
+        "name": "Tyre 1 temperature"
+      },
+      "tyre_2_pressure": {
+        "name": "Tyre 2 pressure"
+      },
+      "tyre_2_temp": {
+        "name": "Tyre 2 temperature"
+      },
+      "tyre_3_pressure": {
+        "name": "Tyre 3 pressure"
+      },
+      "tyre_3_temp": {
+        "name": "Tyre 3 temperature"
+      },
+      "tyre_4_pressure": {
+        "name": "Tyre 4 pressure"
+      },
+      "tyre_4_temp": {
+        "name": "Tyre 4 temperature"
+      },
+      "pm25": {
+        "name": "Cabin PM2.5"
+      },
+      "charge_window_start": {
+        "name": "Reported charge window start"
+      },
+      "charge_window_stop": {
+        "name": "Reported charge window stop"
+      },
+      "last_report": {
+        "name": "Last report"
+      }
     },
     "binary_sensor": {
-      "plugged": { "name": "Plugged in" },
-      "charging": { "name": "Charging" },
-      "locked": { "name": "Lock" },
-      "door_open": { "name": "Door" },
-      "window_open": { "name": "Window" },
-      "hatch_open": { "name": "Boot" },
-      "online": { "name": "Online" }
+      "plugged": {
+        "name": "Plugged in"
+      },
+      "charging": {
+        "name": "Charging"
+      },
+      "locked": {
+        "name": "Lock"
+      },
+      "door_open": {
+        "name": "Door"
+      },
+      "window_open": {
+        "name": "Window"
+      },
+      "hatch_open": {
+        "name": "Boot"
+      },
+      "online": {
+        "name": "Online"
+      },
+      "charger_locked": {
+        "name": "Charger lock"
+      }
     },
     "button": {
-      "charge_now": { "name": "Charge now" },
-      "charge_pause": { "name": "Pause charging" },
-      "refresh": { "name": "Refresh" }
+      "charge_now": {
+        "name": "Charge now"
+      },
+      "charge_pause": {
+        "name": "Pause charging"
+      },
+      "refresh": {
+        "name": "Refresh"
+      },
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "precondition_battery": {
+        "name": "Precondition battery"
+      }
     },
     "switch": {
-      "charging": { "name": "Scheduled charging" }
+      "charging": {
+        "name": "Scheduled charging"
+      },
+      "steering_heat": {
+        "name": "Steering wheel heat"
+      },
+      "ventilation": {
+        "name": "Ventilation"
+      }
     },
     "device_tracker": {
-      "location": { "name": "Location" }
+      "location": {
+        "name": "Location"
+      }
+    },
+    "climate": {
+      "climate": {
+        "name": "Climate"
+      }
+    },
+    "lock": {
+      "doors": {
+        "name": "Doors"
+      }
+    },
+    "cover": {
+      "windows": {
+        "name": "Windows"
+      },
+      "sunroof": {
+        "name": "Sunroof"
+      },
+      "tailgate": {
+        "name": "Tailgate"
+      }
     }
   }
 }

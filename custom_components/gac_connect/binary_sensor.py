@@ -40,6 +40,9 @@ BINARY_SENSORS: tuple[GacBinary, ...] = (
               value=lambda s: s.hatch_open),
     GacBinary(key="online", translation_key="online", device_class=BinarySensorDeviceClass.CONNECTIVITY,
               entity_category=EntityCategory.DIAGNOSTIC, value=lambda s: s.online),
+    GacBinary(key="charger_locked", translation_key="charger_locked", device_class=BinarySensorDeviceClass.LOCK,
+              entity_category=EntityCategory.DIAGNOSTIC,
+              value=lambda s: (not s.charger_locked) if s.charger_locked is not None else None),
 )
 
 

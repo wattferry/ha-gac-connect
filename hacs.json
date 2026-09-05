@@ -1,5 +1,5 @@
 {
-  "name": "GAC Connect (unofficial)",
+  "name": "GAC Connect (unofficial, beta)",
   "homeassistant": "2025.1.0",
   "render_readme": true,
   "hide_default_branch": true
