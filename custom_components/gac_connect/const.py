@@ -24,6 +24,9 @@ MIN_SCAN_INTERVAL: Final = 60
 DEFAULT_ENABLE_TRACKER: Final = False
 DEFAULT_AC_MINUTES: Final = 30       # minutes an A/C run lasts
 
+SIGNAL_COMMAND_RESULT: Final = "gac_connect_command_result_{vin}"
+EVENT_COMMAND_RESULT: Final = "gac_connect_command_result"
+
 PLATFORMS: Final = [
     "sensor", "binary_sensor", "button", "switch", "device_tracker",
     "climate", "lock", "cover",

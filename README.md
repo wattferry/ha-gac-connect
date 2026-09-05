@@ -74,6 +74,15 @@ A ready-made car view using only built-in cards (no extra installs) is in
 entity prefix with your vehicle's, then paste the whole file into a new
 dashboard via Dashboards → Add Dashboard → Edit → Raw configuration editor.
 
+## Command results
+
+Remote commands are applied asynchronously. The integration receives each
+command's result from the service and refreshes the status straight away, so
+entities confirm within seconds rather than at the next poll. A refused command
+clears the requested state and is logged. Each result also fires a
+`gac_connect_command_result` event (`device_id`, `ok`, `code`, `event`,
+`session_id`) for automations.
+
 ## Services
 
 `gac_connect.charge_now`, `charge_pause`, `set_charge_window` (a daily

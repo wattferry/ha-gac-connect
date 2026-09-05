@@ -6,12 +6,18 @@ poll confirms it. A run lasts the "A/C run time" option (default 30 minutes).
 """
 from __future__ import annotations
 
+import asyncio
 from time import monotonic
 from typing import Any
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+import logging
+
+from gac_connect import command_session_id
+from gac_connect.push import PushResult
+
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -19,6 +25,8 @@ from . import GacConfigEntry
 from .const import CONF_AC_MINUTES, DEFAULT_AC_MINUTES
 from .coordinator import GacCoordinator
 from .entity import GacEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TARGET_C = 24.0
 MIN_TEMP_C, MAX_TEMP_C = 18.0, 32.0   # °C
@@ -33,6 +41,7 @@ async def async_setup_entry(
 
 class GacClimate(GacEntity, ClimateEntity):
     _attr_translation_key = "climate"
+    _result_events = ("control_air_condition",)
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT_COOL]
     _attr_supported_features = (
@@ -51,6 +60,8 @@ class GacClimate(GacEntity, ClimateEntity):
         self._target: float | None = None    # setpoint asked for from HA
         self._pending: bool | None = None    # requested on/off until the car confirms
         self._pending_until: float = 0.0     # ...or until this deadline passes
+        self._op_lock = asyncio.Lock()      # one command at a time per entity
+        self._init_results()
 
     @property
     def _run_minutes(self) -> int:
@@ -93,29 +104,52 @@ class GacClimate(GacEntity, ClimateEntity):
                 self._target = None
         super()._handle_coordinator_update()
 
-    def _mark_pending(self, on: bool) -> None:
-        self._pending = on
-        self._pending_until = monotonic() + PENDING_SECONDS
-        self.async_write_ha_state()
+    def _on_command_result(self, result: PushResult) -> None:
+        if self._pending is None:
+            return
+        if result.ok is False:
+            _LOGGER.warning("car did not apply the climate command (result code %s)", result.code)
+            self._pending = None
+            self._target = None
+            self.async_write_ha_state()
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        if hvac_mode == HVACMode.OFF:
-            await self.async_turn_off()
-        else:
-            await self.async_turn_on()
+    async def _command(self, on: bool, target: float | None = None) -> None:
+        """Send A/C on (at ``target`` °C) or off, showing the requested state at once.
+
+        Everything — capturing the previous state, building the request, and
+        restoring on failure or cancellation — happens under the entity's lock,
+        so overlapping calls cannot interleave and a failed request always puts
+        back exactly what it replaced.
+        """
+        async with self._op_lock:
+            prev = (self._pending, self._pending_until, self._target)
+            self._pending, self._pending_until = on, monotonic() + PENDING_SECONDS
+            if target is not None:
+                self._target = target
+            self._begin_command()
+            self.async_write_ha_state()
+            client, vin = self.coordinator.client, self.coordinator.vin
+            resp = None
+            try:
+                if on:
+                    setpoint = self._target if self._target is not None else (self.target_temperature or DEFAULT_TARGET_C)
+                    resp = await self._send(client.climate_on(vin, temperature=setpoint, minutes=self._run_minutes))
+                else:
+                    resp = await self._send(client.climate_off(vin))
+            finally:
+                if resp is None:
+                    self._pending, self._pending_until, self._target = prev
+                    self._end_command(None)
+                    self.async_write_ha_state()
+                else:
+                    self._end_command(command_session_id(resp))
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self) -> None:
-        await self._send(self.coordinator.client.climate_on(
-            self.coordinator.vin, temperature=self.target_temperature or DEFAULT_TARGET_C,
-            minutes=self._run_minutes,
-        ))
-        self._mark_pending(True)
-        await self.coordinator.async_request_refresh()
+        await self._command(True)
 
     async def async_turn_off(self) -> None:
-        await self._send(self.coordinator.client.climate_off(self.coordinator.vin))
-        self._mark_pending(False)
-        await self.coordinator.async_request_refresh()
+        await self._command(False)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -129,9 +163,11 @@ class GacClimate(GacEntity, ClimateEntity):
             raise ServiceValidationError(
                 f"temperature must be between {MIN_TEMP_C:g} and {MAX_TEMP_C:g} °C, got {temp}"
             )
-        self._target = round(value * 2) / 2
-        self._pending_until = monotonic() + PENDING_SECONDS
+        new_target = round(value * 2) / 2
         if self.hvac_mode == HVACMode.HEAT_COOL:
-            await self.async_turn_on()   # re-send so the car adopts the new setpoint
-        else:
+            await self._command(True, target=new_target)   # re-send so the car adopts it
+            return
+        async with self._op_lock:
+            self._target = new_target
+            self._pending_until = monotonic() + PENDING_SECONDS
             self.async_write_ha_state()

@@ -38,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GacConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = GacRuntime(client=client, coordinator=coordinator, options=dict(entry.options))
+    coordinator.start_push()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_reload_on_update))
 

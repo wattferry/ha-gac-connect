@@ -8,11 +8,16 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import asyncio
 from time import monotonic
 from typing import Any
 
 from gac_connect.commands import validate_climate
+import logging
+
 from gac_connect.models import ChargingMode, VehicleStatus
+from gac_connect import command_session_id
+from gac_connect.push import PushResult
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -30,18 +35,25 @@ class GacSwitch(SwitchEntityDescription):
     off_cmd: str
     # None = the car does not report this; the switch keeps the last requested state.
     state: Callable[[VehicleStatus], bool | None] | None = None
+    # result events that answer this switch's commands; with none listed, results
+    # can only be matched by session id, so a refusal may not clear the state
+    events: tuple[str, ...] = ()
 
+
+_LOGGER = logging.getLogger(__name__)
 
 REQUEST_SECONDS = 180   # a requested state overrides the car's report at most this long
 
 
 SWITCHES: tuple[GacSwitch, ...] = (
     GacSwitch(key="steering_heat", translation_key="steering_heat", icon="mdi:steering",
-              on_cmd="steering-on", off_cmd="steering-off", state=lambda s: s.steering_heat_on),
+              on_cmd="steering-on", off_cmd="steering-off", state=lambda s: s.steering_heat_on,
+              events=("control_steering",)),
     GacSwitch(key="lights", translation_key="lights", icon="mdi:car-light-high",
-              on_cmd="flash-on", off_cmd="flash-off", state=lambda s: s.lights_on),
+              on_cmd="flash-on", off_cmd="flash-off", state=lambda s: s.lights_on,
+              events=("control_light",)),
     GacSwitch(key="ventilation", translation_key="ventilation", icon="mdi:fan",
-              on_cmd="ventilate-on", off_cmd="ventilate-off"),
+              on_cmd="ventilate-on", off_cmd="ventilate-off", events=("control_ventilate_mode",)),
 )
 
 
@@ -89,6 +101,9 @@ class GacCommandSwitch(GacEntity, SwitchEntity):
         self.entity_description = description
         self._requested: bool | None = None
         self._requested_until: float = 0.0
+        self._op_lock = asyncio.Lock()      # one command at a time per entity
+        self._result_events = description.events
+        self._init_results()
         self._attr_assumed_state = description.state is None
 
     @property
@@ -107,13 +122,40 @@ class GacCommandSwitch(GacEntity, SwitchEntity):
                 self._requested = None   # the car's report is authoritative again
         super()._handle_coordinator_update()
 
+    def _on_command_result(self, result: PushResult) -> None:
+        if self._requested is None:
+            return
+        if result.ok is False:
+            _LOGGER.warning("car did not apply %s (result code %s)", self.entity_id, result.code)
+            self._requested = None
+            self.async_write_ha_state()
+
+    async def _run(self, on: bool, make_request) -> None:
+        """Show the requested state at once; undo it if the request itself fails.
+
+        Commands on one entity run one at a time (the request is only created
+        once the lock is held), and cancellation restores the previous state.
+        """
+        async with self._op_lock:
+            prev = (self._requested, self._requested_until)
+            self._requested, self._requested_until = on, monotonic() + REQUEST_SECONDS
+            self._begin_command()
+            self.async_write_ha_state()
+            resp = None
+            try:
+                resp = await self._send(make_request())
+            finally:
+                if resp is None:
+                    self._requested, self._requested_until = prev
+                    self._end_command(None)
+                    self.async_write_ha_state()
+                else:
+                    self._end_command(command_session_id(resp))
+        await self.coordinator.async_request_refresh()
+
     async def _set(self, on: bool) -> None:
         cmd = self.entity_description.on_cmd if on else self.entity_description.off_cmd
-        await self._send(self.coordinator.client.command(self.coordinator.vin, cmd))
-        self._requested = on
-        self._requested_until = monotonic() + REQUEST_SECONDS
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
+        await self._run(on, lambda: self.coordinator.client.command(self.coordinator.vin, cmd))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self._set(True)
@@ -128,7 +170,8 @@ class GacClimateSwitch(GacCommandSwitch):
     def __init__(self, coordinator: GacCoordinator) -> None:
         super().__init__(coordinator, GacSwitch(
             key="climate_power", translation_key="climate_power", icon="mdi:air-conditioner",
-            on_cmd="aircon-on", off_cmd="aircon-off", state=lambda s: s.ac_on))
+            on_cmd="aircon-on", off_cmd="aircon-off", state=lambda s: s.ac_on,
+            events=("control_air_condition",)))
 
     async def _set(self, on: bool) -> None:
         client, vin = self.coordinator.client, self.coordinator.vin
@@ -139,10 +182,6 @@ class GacClimateSwitch(GacCommandSwitch):
                 target, _ = validate_climate(target, minutes)
             except ValueError:
                 target = 24.0   # no usable reported setpoint
-            await self._send(client.climate_on(vin, temperature=target, minutes=minutes))
+            await self._run(on, lambda: client.climate_on(vin, temperature=target, minutes=minutes))
         else:
-            await self._send(client.climate_off(vin))
-        self._requested = on
-        self._requested_until = monotonic() + REQUEST_SECONDS
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
+            await self._run(on, lambda: client.climate_off(vin))

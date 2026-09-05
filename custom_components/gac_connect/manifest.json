@@ -14,7 +14,7 @@
     "gac_connect"
   ],
   "requirements": [
-    "gac-connect==0.2.0b4"
+    "gac-connect==0.2.0b5"
   ],
-  "version": "0.2.0b4"
+  "version": "0.2.0b5"
 }
