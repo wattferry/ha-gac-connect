@@ -1,4 +1,4 @@
-"""Switches: the charge gate, steering-wheel heat and cabin ventilation.
+"""Switches: pre-conditioning, the charge gate, steering-wheel heat, ventilation, flash lights.
 
 Scheduled charging: the car has no plain start/stop; this models the charge
 gate. On lets the car charge whenever plugged in; off gates charging via the
@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from time import monotonic
 from typing import Any
 
+from gac_connect.commands import validate_climate
 from gac_connect.models import ChargingMode, VehicleStatus
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -18,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GacConfigEntry
+from .const import CONF_AC_MINUTES, DEFAULT_AC_MINUTES
 from .coordinator import GacCoordinator
 from .entity import GacEntity
 
@@ -36,6 +38,8 @@ REQUEST_SECONDS = 180   # a requested state overrides the car's report at most t
 SWITCHES: tuple[GacSwitch, ...] = (
     GacSwitch(key="steering_heat", translation_key="steering_heat", icon="mdi:steering",
               on_cmd="steering-on", off_cmd="steering-off", state=lambda s: s.steering_heat_on),
+    GacSwitch(key="lights", translation_key="lights", icon="mdi:car-light-high",
+              on_cmd="flash-on", off_cmd="flash-off", state=lambda s: s.lights_on),
     GacSwitch(key="ventilation", translation_key="ventilation", icon="mdi:fan",
               on_cmd="ventilate-on", off_cmd="ventilate-off"),
 )
@@ -45,7 +49,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: GacConfigEntry, add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data.coordinator
-    entities: list[SwitchEntity] = [GacChargeSwitch(coordinator)]
+    entities: list[SwitchEntity] = [GacChargeSwitch(coordinator), GacClimateSwitch(coordinator)]
     entities.extend(GacCommandSwitch(coordinator, d) for d in SWITCHES)
     add_entities(entities)
 
@@ -116,3 +120,29 @@ class GacCommandSwitch(GacEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._set(False)
+
+
+class GacClimateSwitch(GacCommandSwitch):
+    """Plain on/off for cabin pre-conditioning; the climate entity sets the temperature."""
+
+    def __init__(self, coordinator: GacCoordinator) -> None:
+        super().__init__(coordinator, GacSwitch(
+            key="climate_power", translation_key="climate_power", icon="mdi:air-conditioner",
+            on_cmd="aircon-on", off_cmd="aircon-off", state=lambda s: s.ac_on))
+
+    async def _set(self, on: bool) -> None:
+        client, vin = self.coordinator.client, self.coordinator.vin
+        if on:
+            minutes = self.coordinator.config_entry.options.get(CONF_AC_MINUTES, DEFAULT_AC_MINUTES)
+            target = self.status.ac_target_temp_c if self.status else None
+            try:
+                target, _ = validate_climate(target, minutes)
+            except ValueError:
+                target = 24.0   # no usable reported setpoint
+            await self._send(client.climate_on(vin, temperature=target, minutes=minutes))
+        else:
+            await self._send(client.climate_off(vin))
+        self._requested = on
+        self._requested_until = monotonic() + REQUEST_SECONDS
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()

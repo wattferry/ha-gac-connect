@@ -98,9 +98,15 @@ views:
           - type: heading
             heading: Controls
             icon: mdi:car-cog
+          - type: tile
+            entity: switch.aion_v_pre_conditioning
+            name: A/C
           - type: thermostat
             entity: climate.aion_v_climate
             name: Pre-conditioning
+            features:
+              - type: climate-hvac-modes
+                hvac_modes: [off, heat_cool]
           - type: tile
             entity: lock.aion_v_doors
             name: Doors
@@ -111,13 +117,23 @@ views:
             features:
               - type: cover-open-close
           - type: tile
+            entity: cover.aion_v_sunroof
+            name: Sunroof
+            features:
+              - type: cover-open-close
+          - type: tile
+            entity: cover.aion_v_tailgate
+            name: Tailgate
+            features:
+              - type: cover-open-close
+          - type: tile
             entity: switch.aion_v_steering_wheel_heat
             name: Steering heat
           - type: tile
             entity: switch.aion_v_ventilation
             name: Ventilation
           - type: tile
-            entity: button.aion_v_flash_lights
+            entity: switch.aion_v_flash_lights
             name: Flash lights
 
       - type: grid

@@ -59,11 +59,12 @@ takes.
   a run lasts the "A/C run time" option (default 30 minutes).
 - **Lock**: lock the doors from Home Assistant (unlocking needs the car's
   remote-control PIN, which is not supported yet, and reports an error).
-- **Covers**: windows, and sunroof / tailgate where the car has them. Opening
-  really opens them — treat automations that touch these with care.
-- **Switches**: scheduled charging (the charge gate), steering-wheel heat, cabin
-  ventilation.
-- **Buttons**: charge now / pause, flash lights, precondition battery, refresh.
+- **Covers**: windows, sunroof and tailgate (state may read unknown when the car
+  does not report it; open / close still work). Opening really opens them — treat
+  automations that touch these with care.
+- **Switches**: pre-conditioning (plain A/C on / off), scheduled charging (the
+  charge gate), steering-wheel heat, cabin ventilation, flash lights.
+- **Buttons**: charge now / pause, precondition battery, refresh.
 - **Location tracker** (off by default — enable it in the integration's options).
 
 ## Example dashboard

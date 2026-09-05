@@ -1,7 +1,8 @@
-"""Covers: windows, sunroof and tailgate (only the ones the car reports as fitted).
+"""Covers: windows, sunroof and tailgate.
 
-Opening is exposed because the car supports it, but treat it like any other
-remote-open: an automation that opens the windows will really open them.
+The state is unknown when the car does not report it; open and close still work. Opening is
+exposed because the car supports it, but treat it like any other remote-open: an
+automation that opens the windows will really open them.
 """
 from __future__ import annotations
 
@@ -42,19 +43,11 @@ COVERS: tuple[GacCover, ...] = (
 )
 
 
-def _fitted(status: VehicleStatus | None, d: GacCover) -> bool:
-    # The model reports None for a group the car does not have (or marks as
-    # not fitted), False/True once it is present.
-    if status is None:
-        return d.key == "windows"
-    return d.is_open(status) is not None
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: GacConfigEntry, add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data.coordinator
-    add_entities(GacCoverEntity(coordinator, d) for d in COVERS if _fitted(coordinator.data, d))
+    add_entities(GacCoverEntity(coordinator, d) for d in COVERS)
 
 
 class GacCoverEntity(GacEntity, CoverEntity):

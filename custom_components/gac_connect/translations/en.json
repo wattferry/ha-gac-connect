@@ -149,9 +149,6 @@
       "refresh": {
         "name": "Refresh"
       },
-      "flash_lights": {
-        "name": "Flash lights"
-      },
       "precondition_battery": {
         "name": "Precondition battery"
       }
@@ -165,6 +162,12 @@
       },
       "ventilation": {
         "name": "Ventilation"
+      },
+      "climate_power": {
+        "name": "Pre-conditioning"
+      },
+      "lights": {
+        "name": "Flash lights"
       }
     },
     "device_tracker": {

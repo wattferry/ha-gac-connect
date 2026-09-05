@@ -10,9 +10,10 @@ if TYPE_CHECKING:
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_REGION, PLATFORMS
+from .const import CONF_REGION, CONF_VIN, DOMAIN, PLATFORMS
 from .coordinator import ConfigEntryStore, GacCoordinator
 from .helpers import async_build_client
 
@@ -32,6 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GacConfigEntry) -> bool:
     client = await async_build_client(hass, entry.data[CONF_REGION], http, ConfigEntryStore(hass, entry))
     await client.load()
 
+    _remove_retired_entities(hass, entry)
     coordinator = GacCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
@@ -41,6 +43,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: GacConfigEntry) -> bool:
 
     _register_services(hass)
     return True
+
+
+# unique-id suffixes of entities earlier versions created and later versions replaced
+_RETIRED: tuple[tuple[str, str], ...] = (("button", "flash_lights"),)
+
+
+def _remove_retired_entities(hass: HomeAssistant, entry: GacConfigEntry) -> None:
+    registry = er.async_get(hass)
+    for domain, suffix in _RETIRED:
+        entity_id = registry.async_get_entity_id(domain, DOMAIN, f"{entry.data[CONF_VIN]}_{suffix}")
+        if entity_id:
+            registry.async_remove(entity_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GacConfigEntry) -> bool:
