@@ -50,7 +50,7 @@ takes.
 ## Entities
 
 - **Sensors**: battery, range, odometer, cabin temperature and PM2.5, 12 V battery,
-  charge current and estimated time, per-tyre pressure and temperature, and the
+  charge power, voltage, current and estimated time, per-tyre pressure and temperature, and the
   time of the car's last report (the reported charge window is available as
   disabled-by-default diagnostics).
 - **Binary sensors**: plugged-in, charging, door / window / boot open, lock,

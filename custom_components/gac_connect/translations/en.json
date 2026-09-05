@@ -111,6 +111,12 @@
       },
       "last_report": {
         "name": "Last report"
+      },
+      "charge_power": {
+        "name": "Charge power"
+      },
+      "charge_voltage": {
+        "name": "Charge voltage"
       }
     },
     "binary_sensor": {
