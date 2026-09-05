@@ -151,6 +151,9 @@
       },
       "precondition_battery": {
         "name": "Precondition battery"
+      },
+      "horn": {
+        "name": "Sound horn"
       }
     },
     "switch": {

@@ -64,7 +64,7 @@ takes.
   automations that touch these with care.
 - **Switches**: pre-conditioning (plain A/C on / off), scheduled charging (the
   charge gate), steering-wheel heat, cabin ventilation, flash lights.
-- **Buttons**: charge now / pause, precondition battery, refresh.
+- **Buttons**: charge now / pause, sound horn, precondition battery, refresh.
 - **Location tracker** (off by default — enable it in the integration's options).
 
 ## Example dashboard

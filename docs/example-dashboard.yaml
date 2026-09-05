@@ -135,6 +135,9 @@ views:
           - type: tile
             entity: switch.aion_v_flash_lights
             name: Flash lights
+          - type: tile
+            entity: button.aion_v_sound_horn
+            name: Horn
 
       - type: grid
         cards:

@@ -1,4 +1,4 @@
-"""Buttons: force refresh, charge now/pause, battery preconditioning."""
+"""Buttons: force refresh, charge now/pause, sound horn, battery preconditioning."""
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -25,6 +25,8 @@ BUTTONS: tuple[GacButton, ...] = (
               press=lambda c, vin: c.charge_now(vin)),
     GacButton(key="charge_pause", translation_key="charge_pause",
               press=lambda c, vin: c.charge_pause(vin)),
+    GacButton(key="horn", translation_key="horn", icon="mdi:bullhorn",
+              press=lambda c, vin: c.command(vin, "horn-on")),
     GacButton(key="precondition_battery", translation_key="precondition_battery",
               icon="mdi:battery-heart-variant",
               press=lambda c, vin: c.command(vin, "battery-precondition")),
