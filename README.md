@@ -69,6 +69,11 @@ takes.
 
 ## Example dashboard
 
+![Example car view](docs/images/aion-v.png)
+
+The car renders in `docs/images/` are CC BY 4.0 (see `docs/images/ATTRIBUTION.md`);
+copy them to `config/www/car/` to use them in the example.
+
 A ready-made car view using only built-in cards (no extra installs) is in
 [`docs/example-dashboard.yaml`](docs/example-dashboard.yaml). Replace the `aion_v`
 entity prefix with your vehicle's, then paste the whole file into a new
