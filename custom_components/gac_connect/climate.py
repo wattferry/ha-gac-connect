@@ -21,7 +21,7 @@ from .coordinator import GacCoordinator
 from .entity import GacEntity
 
 DEFAULT_TARGET_C = 24.0
-MIN_TEMP_C, MAX_TEMP_C = 16.0, 30.0
+MIN_TEMP_C, MAX_TEMP_C = 18.0, 32.0   # °C
 PENDING_SECONDS = 180   # how long a requested state may override the car's report
 
 
