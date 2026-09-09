@@ -145,6 +145,15 @@ class GacClimate(GacEntity, ClimateEntity):
                     self._end_command(command_session_id(resp))
         await self.coordinator.async_request_refresh()
 
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Mode selector in the more-info dialog: HEAT_COOL starts the A/C at the setpoint, OFF stops it."""
+        if hvac_mode == HVACMode.OFF:
+            await self._command(False)
+        elif hvac_mode == HVACMode.HEAT_COOL:
+            await self._command(True)
+        else:
+            raise ServiceValidationError(f"Unsupported mode {hvac_mode}; the car offers auto (heat_cool) or off")
+
     async def async_turn_on(self) -> None:
         await self._command(True)
 

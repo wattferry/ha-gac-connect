@@ -125,6 +125,10 @@ EV brands into Home Assistant and Python, among them:
 
 Thanks to their authors for showing what a good community integration looks like.
 
+## Changes
+
+- **0.2.0b7** — climate: the mode selector in the more-info dialog now works (`set_hvac_mode` was missing; heat_cool starts the A/C at the setpoint, off stops it).
+
 ## License
 
 MIT. Built on the [`gac-connect`](https://pypi.org/project/gac-connect/) library.
