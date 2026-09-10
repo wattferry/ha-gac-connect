@@ -133,10 +133,12 @@ Thanks to their authors for showing what a good community integration looks like
 
 ## Changes
 
-- **Unreleased** — the example dashboard now covers the sensors added since
-  0.2.0b2 (charge power and voltage, last report, charger lock, cabin PM2.5,
-  tyre temperatures, refresh and battery-preconditioning buttons, location
-  tile), and names the charging switch by what it does.
+- **0.2.0b8** — docs only, no code change. The example dashboard now covers the
+  sensors added since 0.2.0b2 (charge power and voltage, last report, charger
+  lock, cabin PM2.5, tyre temperatures, refresh and battery-preconditioning
+  buttons, location tile). The charging switch tile is named for what it does:
+  on charges whenever the car is plugged in, off waits for the car's own
+  schedule. Tyres are numbered rather than assigned corners.
 
 - **0.2.0b7** — climate: the mode selector in the more-info dialog now works (`set_hvac_mode` was missing; heat_cool starts the A/C at the setpoint, off stops it).
 
