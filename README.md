@@ -79,6 +79,12 @@ A ready-made car view using only built-in cards (no extra installs) is in
 entity prefix with your vehicle's, then paste the whole file into a new
 dashboard via Dashboards → Add Dashboard → Edit → Raw configuration editor.
 
+It covers battery, range, odometer and report freshness; charging state with
+power, current and voltage while charging; the remote controls; locks, openings,
+cabin temperature and air quality; tyre pressures and temperatures; and
+location. The file's header comments explain how to switch tyre pressure to psi,
+enable location tracking, and remove the cards that send commands to the car.
+
 ## Command results
 
 Remote commands are applied asynchronously. The integration receives each
@@ -126,6 +132,11 @@ EV brands into Home Assistant and Python, among them:
 Thanks to their authors for showing what a good community integration looks like.
 
 ## Changes
+
+- **Unreleased** — the example dashboard now covers the sensors added since
+  0.2.0b2 (charge power and voltage, last report, charger lock, cabin PM2.5,
+  tyre temperatures, refresh and battery-preconditioning buttons, location
+  tile), and names the charging switch by what it does.
 
 - **0.2.0b7** — climate: the mode selector in the more-info dialog now works (`set_hvac_mode` was missing; heat_cool starts the A/C at the setpoint, off stops it).
 

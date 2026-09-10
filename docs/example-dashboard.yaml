@@ -11,13 +11,26 @@
 # TYRE PRESSURE IN PSI: the car reports kPa; to see psi, open a tyre sensor →
 # settings (gear) → Unit of measurement → psi. Home Assistant converts it.
 #
-# LOCATION MAP: the map needs the location tracker. Turn it on in Settings →
-# Devices & Services → GAC Connect → Configure → Enable location tracking.
-# If it is off, delete the Location section or the map shows nothing.
+# LOCATION: the "Where" tile and the map both need the location tracker. Turn it
+# on in Settings → Devices & Services → GAC Connect → Configure → Enable
+# location tracking. With it off the tracker entity is not created at all, so
+# delete both cards (or the whole Location section) to avoid an error tile.
 #
-# Layout: `type: sections` with 3 columns. Remove the Controls section (or any
-# card in it) if you do not want remote commands on the dashboard. Each section is small so Home
-# Assistant balances them; on a narrow screen they stack automatically.
+# CHARGE WINDOW: the car's own reported charge-window sensors are disabled by
+# default (they are reported on the service's clock, which may not match yours).
+# Enable them under the device page if you want them, then add tiles for
+# sensor.aion_v_reported_charge_window_start / _stop.
+#
+# NOT EVERY CAR REPORTS EVERYTHING: a reading your car never sends usually shows
+# as Unknown; Unavailable means the integration could not update at all. Delete
+# any tile your car does not support.
+#
+# NO REMOTE COMMANDS: if you would rather the dashboard could not send anything
+# to the car, delete the Controls section AND, in Charging, the "Charge on
+# plug-in", "Charge now" and "Pause" tiles — those send commands too.
+#
+# Layout: `type: sections` with 3 columns. Each section is small so Home
+# Assistant balances them; on a narrow screen they stack.
 
 views:
   - title: Car
@@ -42,6 +55,11 @@ views:
           - type: tile
             entity: sensor.aion_v_odometer
             name: Odometer
+          - type: tile
+            entity: sensor.aion_v_last_report
+            name: Last report
+            # The timestamp that came with the latest vehicle status. Individual
+            # readings may be older than it.
 
       - type: grid
         cards:
@@ -55,8 +73,13 @@ views:
             entity: binary_sensor.aion_v_charging
             name: Charging
           - type: tile
+            entity: binary_sensor.aion_v_charger_lock
+            name: Charger lock
+          - type: tile
             entity: switch.aion_v_scheduled_charging
-            name: Scheduled
+            name: Charge on plug-in
+            # On = the car charges whenever it is plugged in. Off = it waits for
+            # its own charging schedule, so plugging in does not start a charge.
           - type: tile
             entity: sensor.aion_v_estimated_charge_time
             name: Charge time
@@ -66,8 +89,24 @@ views:
                 state: "on"
             card:
               type: tile
-              entity: sensor.aion_v_charge_current
+              entity: sensor.aion_v_charge_power
               name: Charging at
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.aion_v_charging
+                state: "on"
+            card:
+              type: tile
+              entity: sensor.aion_v_charge_current
+              name: Current
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.aion_v_charging
+                state: "on"
+            card:
+              type: tile
+              entity: sensor.aion_v_charge_voltage
+              name: Voltage
           - type: tile
             entity: button.aion_v_charge_now
             name: Charge now
@@ -92,6 +131,13 @@ views:
             entities:
               - entity: sensor.aion_v_range
                 name: Range
+          - type: history-graph
+            hours_to_show: 48
+            entities:
+              - entity: binary_sensor.aion_v_plugged_in
+                name: Plugged in
+              - entity: binary_sensor.aion_v_charging
+                name: Charging
 
       - type: grid
         cards:
@@ -138,6 +184,17 @@ views:
           - type: tile
             entity: button.aion_v_sound_horn
             name: Horn
+          - type: tile
+            entity: button.aion_v_precondition_battery
+            name: Warm the battery
+            tap_action: { action: toggle }
+            # Conditions the pack before fast charging in the cold.
+          - type: tile
+            entity: button.aion_v_refresh
+            name: Refresh
+            tap_action: { action: toggle }
+            # Asks the integration to poll for a new status. It does not wake the
+            # car, and during quiet hours it keeps the last reading.
 
       - type: grid
         cards:
@@ -160,6 +217,9 @@ views:
             entity: sensor.aion_v_cabin_temperature
             name: Cabin
           - type: tile
+            entity: sensor.aion_v_cabin_pm2_5
+            name: Cabin air quality
+          - type: tile
             entity: sensor.aion_v_12v_battery
             name: 12V
 
@@ -170,16 +230,30 @@ views:
             icon: mdi:car-tire-alert
           - type: tile
             entity: sensor.aion_v_tyre_1_pressure
-            name: Front left
+            name: Tyre 1
           - type: tile
             entity: sensor.aion_v_tyre_2_pressure
-            name: Front right
+            name: Tyre 2
           - type: tile
             entity: sensor.aion_v_tyre_3_pressure
-            name: Rear left
+            name: Tyre 3
           - type: tile
             entity: sensor.aion_v_tyre_4_pressure
-            name: Rear right
+            name: Tyre 4
+          - type: history-graph
+            hours_to_show: 168
+            entities:
+              - entity: sensor.aion_v_tyre_1_temperature
+                name: Tyre 1
+              - entity: sensor.aion_v_tyre_2_temperature
+                name: Tyre 2
+              - entity: sensor.aion_v_tyre_3_temperature
+                name: Tyre 3
+              - entity: sensor.aion_v_tyre_4_temperature
+                name: Tyre 4
+            # Tyre temperatures over a week. The numbering is the car's own; let
+            # air out of one tyre to find which number is which corner, then
+            # rename the tiles.
 
       - type: grid
         cards:
@@ -189,6 +263,10 @@ views:
           - type: tile
             entity: binary_sensor.aion_v_online
             name: Online
+            # "Off" usually means the car is asleep, not that it is unreachable.
+          - type: tile
+            entity: device_tracker.aion_v_location
+            name: Where
           - type: map
             entities:
               - device_tracker.aion_v_location
