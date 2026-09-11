@@ -27,6 +27,7 @@ from . import GacConfigEntry
 from .const import CONF_AC_MINUTES, DEFAULT_AC_MINUTES
 from .coordinator import GacCoordinator
 from .entity import GacEntity
+from . import fridge
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -64,6 +65,7 @@ async def async_setup_entry(
     entities: list[SwitchEntity] = [GacChargeSwitch(coordinator), GacClimateSwitch(coordinator)]
     entities.extend(GacCommandSwitch(coordinator, d) for d in SWITCHES)
     add_entities(entities)
+    fridge.async_add_when_fitted(entry, coordinator, add_entities, lambda: [GacFridgeSwitch(coordinator)])
 
 
 class GacChargeSwitch(GacEntity, SwitchEntity):
@@ -185,3 +187,35 @@ class GacClimateSwitch(GacCommandSwitch):
             await self._run(on, lambda: client.climate_on(vin, temperature=target, minutes=minutes))
         else:
             await self._run(on, lambda: client.climate_off(vin))
+
+
+class GacFridgeSwitch(GacEntity, SwitchEntity):
+    """Fridge on/off. On resumes the last running mode at its last temperature."""
+
+    _attr_translation_key = "fridge"
+    _attr_icon = "mdi:fridge-outline"
+
+    def __init__(self, coordinator: GacCoordinator) -> None:
+        super().__init__(coordinator, "fridge")
+
+    @property
+    def _fridge(self) -> fridge.FridgeController:
+        return fridge.controller(self.coordinator)
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(self._fridge.add_listener(self.async_write_ha_state))
+
+    @property
+    def is_on(self) -> bool | None:
+        return self._fridge.running
+
+    def _handle_coordinator_update(self) -> None:
+        self._fridge.sync()
+        super()._handle_coordinator_update()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._fridge.async_turn_on()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._fridge.async_turn_off()

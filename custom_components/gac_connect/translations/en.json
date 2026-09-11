@@ -177,6 +177,9 @@
       },
       "lights": {
         "name": "Flash lights"
+      },
+      "fridge": {
+        "name": "Fridge"
       }
     },
     "device_tracker": {
@@ -203,6 +206,22 @@
       },
       "tailgate": {
         "name": "Tailgate"
+      }
+    },
+    "select": {
+      "fridge_mode": {
+        "name": "Fridge mode",
+        "state": {
+          "off": "Off",
+          "refrigerate": "Refrigerate",
+          "heat": "Heat",
+          "freeze": "Freeze"
+        }
+      }
+    },
+    "number": {
+      "fridge_temperature": {
+        "name": "Fridge temperature"
       }
     }
   }

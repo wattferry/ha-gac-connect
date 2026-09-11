@@ -199,6 +199,28 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: Fridge
+            icon: mdi:fridge-outline
+            # Only cars with a fridge / warmer box have these; delete this section
+            # if yours does not.
+          - type: tile
+            entity: switch.aion_v_fridge
+            name: Fridge
+          - type: tile
+            entity: select.aion_v_fridge_mode
+            name: Mode
+            features:
+              - type: select-options
+          - type: tile
+            entity: number.aion_v_fridge_temperature
+            name: Temperature
+            features:
+              - type: numeric-input
+                style: buttons
+
+      - type: grid
+        cards:
+          - type: heading
             heading: Security & climate
             icon: mdi:shield-car
           - type: tile

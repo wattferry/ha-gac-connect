@@ -15,6 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_REGION, CONF_VIN, DOMAIN, PLATFORMS
 from .coordinator import ConfigEntryStore, GacCoordinator
+from .fridge import FridgeController, store_key
 from .helpers import async_build_client
 
 type GacConfigEntry = ConfigEntry[GacRuntime]
@@ -25,6 +26,7 @@ class GacRuntime:
     client: GacClient
     coordinator: GacCoordinator
     options: dict = field(default_factory=dict)   # snapshot: reload only when these change
+    fridge: FridgeController | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GacConfigEntry) -> bool:
@@ -38,6 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GacConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = GacRuntime(client=client, coordinator=coordinator, options=dict(entry.options))
+    entry.runtime_data.fridge = FridgeController(hass, entry, coordinator)
+    await entry.runtime_data.fridge.async_setup(entry)
     coordinator.start_push()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_reload_on_update))
@@ -60,6 +64,13 @@ def _remove_retired_entities(hass: HomeAssistant, entry: GacConfigEntry) -> None
 
 async def async_unload_entry(hass: HomeAssistant, entry: GacConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: GacConfigEntry) -> None:
+    """Forget stored fridge preferences with the entry."""
+    from homeassistant.helpers.storage import Store
+
+    await Store(hass, 1, store_key(entry.entry_id)).async_remove()
 
 
 async def _reload_on_update(hass: HomeAssistant, entry: GacConfigEntry) -> None:

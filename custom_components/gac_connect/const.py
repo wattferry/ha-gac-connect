@@ -29,5 +29,5 @@ EVENT_COMMAND_RESULT: Final = "gac_connect_command_result"
 
 PLATFORMS: Final = [
     "sensor", "binary_sensor", "button", "switch", "device_tracker",
-    "climate", "lock", "cover",
+    "climate", "lock", "cover", "select", "number",
 ]

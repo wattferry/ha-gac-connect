@@ -65,6 +65,16 @@ takes.
 - **Switches**: pre-conditioning (plain A/C on / off), scheduled charging (the
   charge gate), steering-wheel heat, cabin ventilation, flash lights.
 - **Buttons**: charge now / pause, sound horn, precondition battery, refresh.
+- **Fridge** (only on cars that have one): an on/off switch, a mode selector
+  (off, refrigerate, heat, freeze) and a target temperature whose range follows
+  the mode (refrigerate 0 to 20 °C, heat 35 to 50 °C, freeze −15 to −1 °C).
+  Switching on resumes the last mode at its last temperature; these are kept
+  across restarts. Changing the temperature while the fridge runs sends it
+  straight away; while it is off the value is kept for the next start. A request
+  shows at once and reverts if the car refuses it or has not confirmed it within
+  three minutes. How long the fridge keeps running after you leave the car depends
+  on the car; an automation can watch the switch and attempt a restart. The
+  entities appear once the car first reports a fridge.
 - **Location tracker** (off by default — enable it in the integration's options).
 
 ## Example dashboard
@@ -132,6 +142,11 @@ EV brands into Home Assistant and Python, among them:
 Thanks to their authors for showing what a good community integration looks like.
 
 ## Changes
+
+- **0.2.0b9** — fridge / warmer box on cars that have one: switch, mode
+  selector and target temperature, sharing one command queue and remembering the
+  last mode and temperatures across restarts. Requires `gac-connect` 0.2.0b7. The
+  example dashboard gains a Fridge section.
 
 - **0.2.0b8** — docs only, no code change. The example dashboard now covers the
   sensors added since 0.2.0b2 (charge power and voltage, last report, charger
