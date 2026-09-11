@@ -32,6 +32,10 @@
 # start). The keep-running setting is changed in the car; its two tiles only
 # report it.
 #
+# TRIPS & CONSUMPTION: GAC's API has no trip figures, so the Trips &
+# consumption section needs the sensors from docs/example-trips.yaml, which
+# Home Assistant counts itself. Without that file, delete the section.
+#
 # NO REMOTE COMMANDS: if you would rather the dashboard could not send anything
 # to the car, delete the Controls section AND, in Charging, the "Charge on
 # plug-in", "Charge now" and "Pause" tiles AND, in Fridge, the Fridge, Mode and
@@ -68,6 +72,50 @@ views:
             name: Last report
             # The timestamp that came with the latest vehicle status. Individual
             # readings may be older than it.
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Trips & consumption
+            icon: mdi:road-variant
+            # GAC's API does not provide these. Home Assistant counts the
+            # kilometres from the odometer and estimates consumption from the
+            # battery level; see docs/example-trips.yaml.
+          - type: tile
+            entity: sensor.aion_v_km_this_week
+            name: This week
+            icon: mdi:calendar-week
+          - type: tile
+            entity: sensor.aion_v_km_this_month
+            name: This month
+            icon: mdi:calendar-month
+          - type: tile
+            entity: sensor.aion_v_km_this_year
+            name: This year
+            icon: mdi:calendar
+          - type: tile
+            entity: sensor.aion_v_odometer
+            name: Overall
+            icon: mdi:counter
+          - type: tile
+            entity: sensor.aion_v_consumption_this_week
+            name: Avg this week
+            icon: mdi:lightning-bolt-outline
+          - type: tile
+            entity: sensor.aion_v_consumption_this_month
+            name: Avg this month
+            icon: mdi:lightning-bolt-outline
+          - type: tile
+            entity: sensor.aion_v_consumption_this_year
+            name: Avg this year
+            icon: mdi:lightning-bolt-outline
+          - type: tile
+            entity: sensor.aion_v_consumption_overall
+            name: Avg overall
+            icon: mdi:lightning-bolt
+            # Note: all four averages are Home Assistant's estimate from
+            # battery-level drops, not the car's figure, and include energy
+            # used while parked.
 
       - type: grid
         cards:
