@@ -99,6 +99,27 @@ and, on cars that have one, the fridge (on/off, mode, temperature and the
 keep-running setting). The file's header comments explain how to switch tyre pressure to psi,
 enable location tracking, and remove the cards that send commands to the car.
 
+## Trips and consumption
+
+Unfortunately GAC's API does not provide trip figures: it reports the odometer
+and the battery level, but no trip history, no weekly, monthly or yearly
+distance, and none of the car's trip computer values.
+[`docs/example-trips.yaml`](docs/example-trips.yaml) is a package that works
+them out in Home Assistant instead, with its own utility meters and template
+sensors: kilometres driven this week, this month and this year, counted by Home
+Assistant from the odometer readings, and the average consumption over each
+(kWh/100 km). The example dashboard's Trips & consumption section shows them.
+
+Consumption is estimated from how far the battery level drops, times a pack size
+you set in the file. Charging is not counted, but energy used while the car is
+parked is (pre-conditioning, the fridge), so the averages read a little higher
+than the car's own. Totals start when you add the package; the file explains how
+to start the overall average from your car's trip computer instead.
+
+**Note:** the average consumption is Home Assistant's estimate, not the car's
+figure. The API has an average-consumption field, but it does not match the
+trip computer (it reads 0.0 on some cars), so the package does not use it.
+
 ## Command results
 
 Remote commands are applied asynchronously. The integration receives each

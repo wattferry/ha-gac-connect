@@ -1,0 +1,149 @@
+# Trips and consumption for a GAC Connect vehicle, built from Home Assistant's
+# own utility meters and template sensors.
+#
+# Unfortunately GAC's API does not provide any of this: it reports the odometer
+# and the battery level, but no trip history, no per-week, per-month or per-year
+# distance, and none of the car's trip computer values. The kilometres this
+# week, month and year are counted by Home Assistant from the odometer readings,
+# starting when you add this file, and the consumption is estimated from the
+# battery level.
+#
+# WHAT YOU GET
+#   Kilometres driven this week, this month and this year, and the average
+#   consumption over each (kWh/100 km), plus an overall average since you added
+#   this file. The example dashboard's "Trips & consumption" section shows them.
+#
+# HOW TO USE
+#   1. Your entity IDs start with your vehicle's name. This example uses
+#      `aion_v` (an "AION V"). If yours differ, find-and-replace `aion_v` with
+#      your prefix (Developer Tools → States, filter "gac" or your model).
+#   2. Set PACK_KWH below to your battery's usable capacity in kWh. The value
+#      here is only an example; take yours from your car's documentation.
+#   3. Save this file as `packages/gac_trips.yaml` in your config folder and make
+#      sure configuration.yaml loads packages:
+#          homeassistant:
+#            packages: !include_dir_named packages
+#   4. Restart Home Assistant.
+#
+# HOW CONSUMPTION IS ESTIMATED
+#   Energy used = how far the battery level drops × PACK_KWH. Charging is not
+#   counted (the energy meters ignore rises), but everything that drains the
+#   battery is, including while the car is parked: pre-conditioning, the fridge,
+#   standby. The averages therefore read a little higher than the car's own trip
+#   computer, and they are only as accurate as PACK_KWH and the reported battery
+#   percentage. Consumption stays Unknown until at least 5 km are counted.
+#
+#   NOTE: this average is Home Assistant's estimate, not the car's figure. The
+#   API has an average-consumption field, but it does not match the trip
+#   computer (it reads 0.0 on some cars), so it is not used here.
+#
+# STARTING TOTALS
+#   Everything starts at zero when you add this file. The weekly, monthly and
+#   yearly meters reset on their own. To start the overall average from your
+#   car's trip computer instead, call the `utility_meter.calibrate` action once
+#   for each "tracked" meter: sensor.aion_v_km_tracked with the kilometres the
+#   trip computer shows, and sensor.aion_v_energy_tracked with those kilometres
+#   × its kWh/100 km ÷ 100.
+
+template:
+  - sensor:
+      - name: Aion V battery energy below full
+        unique_id: aion_v_battery_energy_below_full
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total
+        state: >-
+          {% set PACK_KWH = 75 %}
+          {% set b = states('sensor.aion_v_battery') | float(none) %}
+          {{ (PACK_KWH * (100 - b) / 100) | round(2) if b is not none else none }}
+
+      - name: Aion V consumption this week
+        unique_id: aion_v_consumption_this_week
+        unit_of_measurement: kWh/100km
+        device_class: energy_distance
+        state_class: measurement
+        state: >-
+          {% set e = states('sensor.aion_v_energy_this_week') | float(none) %}
+          {% set k = states('sensor.aion_v_km_this_week') | float(none) %}
+          {{ (e / k * 100) | round(1) if e is not none and k is not none and k >= 5 else none }}
+
+      - name: Aion V consumption this month
+        unique_id: aion_v_consumption_this_month
+        unit_of_measurement: kWh/100km
+        device_class: energy_distance
+        state_class: measurement
+        state: >-
+          {% set e = states('sensor.aion_v_energy_this_month') | float(none) %}
+          {% set k = states('sensor.aion_v_km_this_month') | float(none) %}
+          {{ (e / k * 100) | round(1) if e is not none and k is not none and k >= 5 else none }}
+
+      - name: Aion V consumption this year
+        unique_id: aion_v_consumption_this_year
+        unit_of_measurement: kWh/100km
+        device_class: energy_distance
+        state_class: measurement
+        state: >-
+          {% set e = states('sensor.aion_v_energy_this_year') | float(none) %}
+          {% set k = states('sensor.aion_v_km_this_year') | float(none) %}
+          {{ (e / k * 100) | round(1) if e is not none and k is not none and k >= 5 else none }}
+
+      - name: Aion V consumption overall
+        unique_id: aion_v_consumption_overall
+        unit_of_measurement: kWh/100km
+        device_class: energy_distance
+        state_class: measurement
+        state: >-
+          {% set e = states('sensor.aion_v_energy_tracked') | float(none) %}
+          {% set k = states('sensor.aion_v_km_tracked') | float(none) %}
+          {{ (e / k * 100) | round(1) if e is not none and k is not none and k >= 5 else none }}
+
+# `periodically_resetting: false` matters for the energy meters: the battery
+# level rises when the car charges, and that must not be read as a reset.
+utility_meter:
+  aion_v_km_this_week:
+    name: Aion V km this week
+    unique_id: aion_v_km_this_week
+    source: sensor.aion_v_odometer
+    cycle: weekly
+    periodically_resetting: false
+  aion_v_km_this_month:
+    name: Aion V km this month
+    unique_id: aion_v_km_this_month
+    source: sensor.aion_v_odometer
+    cycle: monthly
+    periodically_resetting: false
+  aion_v_km_this_year:
+    name: Aion V km this year
+    unique_id: aion_v_km_this_year
+    source: sensor.aion_v_odometer
+    cycle: yearly
+    periodically_resetting: false
+  aion_v_km_tracked:
+    name: Aion V km tracked
+    unique_id: aion_v_km_tracked
+    source: sensor.aion_v_odometer
+    periodically_resetting: false
+
+  aion_v_energy_this_week:
+    name: Aion V energy this week
+    unique_id: aion_v_energy_this_week
+    source: sensor.aion_v_battery_energy_below_full
+    cycle: weekly
+    periodically_resetting: false
+  aion_v_energy_this_month:
+    name: Aion V energy this month
+    unique_id: aion_v_energy_this_month
+    source: sensor.aion_v_battery_energy_below_full
+    cycle: monthly
+    periodically_resetting: false
+  aion_v_energy_this_year:
+    name: Aion V energy this year
+    unique_id: aion_v_energy_this_year
+    source: sensor.aion_v_battery_energy_below_full
+    cycle: yearly
+    periodically_resetting: false
+  aion_v_energy_tracked:
+    name: Aion V energy tracked
+    unique_id: aion_v_energy_tracked
+    source: sensor.aion_v_battery_energy_below_full
+    periodically_resetting: false
