@@ -52,14 +52,19 @@
           "scan_interval": "Poll interval (seconds)",
           "enable_tracker": "Enable location tracking",
           "enable_fridge": "Fridge / warmer box controls",
+          "picture": "Car picture on the map (optional)",
           "quiet_start": "Quiet hours start (HH:MM, optional)",
           "quiet_end": "Quiet hours end (HH:MM, optional)",
           "ac_minutes": "A/C run time (minutes)"
         },
         "data_description": {
-          "enable_fridge": "Shown when the car reports a fridge. Turn off to remove them, for example on a trim without one."
+          "enable_fridge": "Shown when the car reports a fridge. Turn off to remove them, for example on a trim without one.",
+          "picture": "An image URL, or a /local/ path such as /local/my-car.png for a file in your config/www folder. Leave empty for the built-in AION V picture; other models show the entity's initials."
         }
       }
+    },
+    "error": {
+      "invalid_picture": "Enter an image URL (https://…) or a path that starts with /, for example /local/my-car.png."
     }
   },
   "entity": {

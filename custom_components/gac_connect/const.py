@@ -19,6 +19,7 @@ CONF_QUIET_END: Final = "quiet_end"
 CONF_ENABLE_TRACKER: Final = "enable_tracker"
 CONF_ENABLE_FRIDGE: Final = "enable_fridge"
 CONF_AC_MINUTES: Final = "ac_minutes"
+CONF_PICTURE: Final = "picture"
 
 DEFAULT_SCAN_INTERVAL: Final = 300     # seconds
 MIN_SCAN_INTERVAL: Final = 60

@@ -79,6 +79,9 @@ takes.
   the car first reports a fridge. If your car has no fridge but they show up
   anyway, turn off *Fridge / warmer box controls* in the options to remove them.
 - **Location tracker** (off by default — enable it in the integration's options).
+  On the map it shows a picture of the car: a built-in render for the AION V, or
+  your own image set in the options (other models show the entity's initials
+  until you set one).
 
 ## Example dashboard
 
@@ -144,8 +147,8 @@ door / window / boot left open — are in
 
 Poll interval, quiet hours (skip polling overnight to spare the 12 V battery),
 whether the location tracker is enabled, whether the fridge controls are shown,
-and how long an A/C run lasts. The poll interval is at least 60 seconds (default
-5 minutes).
+the car's picture on the map (an image URL or a `/local/` path), and how long an
+A/C run lasts. The poll interval is at least 60 seconds (default 5 minutes).
 
 ## Request limits
 
