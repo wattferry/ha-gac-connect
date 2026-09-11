@@ -78,6 +78,9 @@ takes.
   automation can watch the switch and attempt a restart. The entities appear once
   the car first reports a fridge.
 - **Location tracker** (off by default — enable it in the integration's options).
+  On the map it shows a picture of the car: a built-in render for the AION V, or
+  your own image set in the options (other models show the entity's initials
+  until you set one).
 
 ## Example dashboard
 
@@ -121,8 +124,9 @@ door / window / boot left open — are in
 ## Options
 
 Poll interval, quiet hours (skip polling overnight to spare the 12 V battery),
-whether the location tracker is enabled, and how long an A/C run lasts. The poll
-interval is at least 60 seconds (default 5 minutes).
+whether the location tracker is enabled, the car's picture on the map (an image
+URL or a `/local/` path), and how long an A/C run lasts. The poll interval is at
+least 60 seconds (default 5 minutes).
 
 ## Request limits
 

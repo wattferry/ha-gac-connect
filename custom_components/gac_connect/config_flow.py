@@ -32,6 +32,7 @@ from .const import (
     CONF_ENABLE_TRACKER,
     CONF_MOBILE,
     CONF_MODEL,
+    CONF_PICTURE,
     CONF_QUIET_END,
     CONF_QUIET_START,
     CONF_SCAN_INTERVAL,
@@ -191,18 +192,24 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class GacOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
-        opts = self.config_entry.options
+            picture = (user_input.get(CONF_PICTURE) or "").strip()
+            if picture and not picture.startswith(("/", "http://", "https://")):
+                errors[CONF_PICTURE] = "invalid_picture"
+            else:
+                return self.async_create_entry(data={**user_input, CONF_PICTURE: picture})
+        opts = {**self.config_entry.options, **(user_input or {})}
         schema = vol.Schema({
             vol.Optional(CONF_SCAN_INTERVAL,
                          default=opts.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)):
                 vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL)),
             vol.Optional(CONF_ENABLE_TRACKER,
                          default=opts.get(CONF_ENABLE_TRACKER, DEFAULT_ENABLE_TRACKER)): bool,
+            vol.Optional(CONF_PICTURE, description={"suggested_value": opts.get(CONF_PICTURE, "")}): str,
             vol.Optional(CONF_QUIET_START, default=opts.get(CONF_QUIET_START, "")): str,
             vol.Optional(CONF_QUIET_END, default=opts.get(CONF_QUIET_END, "")): str,
             vol.Optional(CONF_AC_MINUTES, default=opts.get(CONF_AC_MINUTES, DEFAULT_AC_MINUTES)):
                 vol.All(vol.Coerce(int), vol.Range(min=5, max=60)),
         })
-        return self.async_show_form(step_id="init", data_schema=schema)
+        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
