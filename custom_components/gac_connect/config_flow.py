@@ -44,7 +44,7 @@ from .const import (
     MIN_SCAN_INTERVAL,
 )
 
-REGIONS = ["AU", "NZ", "GB", "SG", "AE"]
+REGIONS = ["AU", "NZ", "GB", "SG", "AE", "GR"]
 
 
 class GacConfigFlow(ConfigFlow, domain=DOMAIN):
