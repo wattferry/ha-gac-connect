@@ -25,9 +25,17 @@
 # as Unknown; Unavailable means the integration could not update at all. Delete
 # any tile your car does not support.
 #
+# FRIDGE: only cars with a fridge / warmer box have the Fridge section's
+# entities; delete the section if yours does not. The on/off tile and the mode
+# buttons send commands to the car; the temperature buttons do too while the
+# fridge runs (while it is off they only save the temperature for the next
+# start). The keep-running setting is changed in the car; its two tiles only
+# report it.
+#
 # NO REMOTE COMMANDS: if you would rather the dashboard could not send anything
 # to the car, delete the Controls section AND, in Charging, the "Charge on
-# plug-in", "Charge now" and "Pause" tiles — those send commands too.
+# plug-in", "Charge now" and "Pause" tiles AND, in Fridge, the Fridge, Mode and
+# Temperature tiles — those send commands too.
 #
 # Layout: `type: sections` with 3 columns. Each section is small so Home
 # Assistant balances them; on a narrow screen they stack.
@@ -224,6 +232,11 @@ views:
           - type: tile
             entity: sensor.aion_v_fridge_time_left
             name: Time left
+            # only meaningful with a timed setting
+            visibility:
+              - condition: state
+                entity: sensor.aion_v_fridge_after_leaving
+                state: timed
 
       - type: grid
         cards:

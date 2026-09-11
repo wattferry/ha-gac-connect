@@ -11,9 +11,10 @@ if TYPE_CHECKING:
     from gac_connect.client import GacClient
 
 import voluptuous as vol
-from gac_connect.errors import GacError, LoginError
+from gac_connect.errors import GacError, LoginError, RateLimitedError
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -65,6 +66,8 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
                 http = async_create_clientsession(self.hass)
                 self._client = await async_build_client(self.hass, self._region, http)
                 await self._client.start_captcha()
+            except RateLimitedError:
+                errors["base"] = "rate_limited"
             except GacError:
                 errors["base"] = "cannot_connect"
             else:
@@ -105,6 +108,8 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._client.login_sms(self._mobile, user_input["code"])
             except LoginError:
                 errors["base"] = "invalid_code"
+            except RateLimitedError:
+                errors["base"] = "rate_limited"
             except GacError:
                 errors["base"] = "cannot_connect"
             if not errors:
@@ -115,10 +120,24 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
 
     # ---- step 4: pick the vehicle ---------------------------------------
     async def async_step_vehicle(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        vehicles = await self._client.list_vehicles()
+        try:
+            vehicles = await self._client.list_vehicles()
+        except RateLimitedError:
+            return self.async_abort(reason="rate_limited")
+        except GacError:
+            return self.async_abort(reason="cannot_connect")
         if not vehicles:
             return self.async_abort(reason="no_vehicles")
         by_vin = {v.vin: v for v in vehicles}
+
+        if self.source == SOURCE_REAUTH:
+            # Signing in again: keep the same entry and vehicle, store the new session.
+            entry = self._get_reauth_entry()
+            if entry.data[CONF_VIN] not in by_vin:
+                return self.async_abort(reason="wrong_vehicle")
+            return self.async_update_reload_and_abort(entry, data_updates={
+                CONF_SESSION: self._client.session.to_dict(), CONF_MOBILE: self._mobile,
+            })
 
         if len(vehicles) == 1:
             user_input = {CONF_VIN: vehicles[0].vin}
@@ -151,9 +170,17 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
-        http = async_create_clientsession(self.hass)
-        self._client = await async_build_client(self.hass, self._region, http)
-        await self._client.start_captcha()
+        errors: dict[str, str] = {}
+        try:
+            http = async_create_clientsession(self.hass)
+            self._client = await async_build_client(self.hass, self._region, http)
+            await self._client.start_captcha()
+        except RateLimitedError:
+            errors["base"] = "rate_limited"
+        except GacError:
+            errors["base"] = "cannot_connect"
+        if errors:
+            return self.async_show_form(step_id="reauth_confirm", errors=errors)
         return await self.async_step_captcha()
 
     @staticmethod

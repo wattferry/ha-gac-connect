@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, time, timedelta
+from datetime import time, timedelta
+from time import monotonic
 
 from gac_connect import GacError
 from gac_connect.client import GacClient
@@ -18,6 +19,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_QUIET_END,
@@ -27,11 +29,16 @@ from .const import (
     CONF_VIN,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    MIN_SCAN_INTERVAL,
     EVENT_COMMAND_RESULT,
     SIGNAL_COMMAND_RESULT,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Command results can arrive in bursts; the status refreshes they trigger are at
+# least this far apart. (The client library also caps every request it sends.)
+RESULT_REFRESH_GAP = 10.0
 
 
 class ConfigEntryStore:
@@ -64,7 +71,10 @@ class GacCoordinator(DataUpdateCoordinator[VehicleStatus]):
     """Polls one vehicle's status."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: GacClient) -> None:
-        interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        try:   # the options form clamps this too; stored values are checked again here
+            interval = max(MIN_SCAN_INTERVAL, int(entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)))
+        except (TypeError, ValueError):
+            interval = DEFAULT_SCAN_INTERVAL
         super().__init__(
             hass,
             _LOGGER,
@@ -83,6 +93,7 @@ class GacCoordinator(DataUpdateCoordinator[VehicleStatus]):
         self._force_refresh = False       # a command result may refresh inside quiet hours
         self._result_refresh_task: asyncio.Task | None = None
         self._result_refresh_again = False
+        self._last_result_refresh = 0.0
         self._fetch_lock = asyncio.Lock()   # one status request in flight, whatever triggered it
 
     def start_push(self) -> None:
@@ -120,18 +131,21 @@ class GacCoordinator(DataUpdateCoordinator[VehicleStatus]):
 
     async def _result_refresh(self) -> None:
         while True:
+            wait = self._last_result_refresh + RESULT_REFRESH_GAP - monotonic()
+            if wait > 0:
+                await asyncio.sleep(wait)   # results that land meanwhile share this refresh
             self._result_refresh_again = False
             await self.async_refresh()
+            self._last_result_refresh = monotonic()   # the gap runs from when the refresh finished
             if not self._result_refresh_again:
                 return
-            await asyncio.sleep(2)   # results that landed mid-refresh share one more
 
     def _in_quiet_hours(self) -> bool:
         start = _parse_hhmm(self.config_entry.options.get(CONF_QUIET_START))
         end = _parse_hhmm(self.config_entry.options.get(CONF_QUIET_END))
         if not start or not end:
             return False
-        now = datetime.now().time()
+        now = dt_util.now().time()   # Home Assistant's time zone, not the host's
         if start <= end:
             return start <= now < end
         return now >= start or now < end  # window crosses midnight
@@ -148,6 +162,11 @@ class GacCoordinator(DataUpdateCoordinator[VehicleStatus]):
             except AuthExpiredError as err:
                 raise ConfigEntryAuthFailed(str(err)) from err
             except RateLimitedError as err:
-                raise UpdateFailed(str(err)) from err  # retry_after handled by HA if set
+                # Held back by the request limits (or the service asked us to slow
+                # down): keep showing the last reading rather than going unavailable.
+                if self.data is not None:
+                    _LOGGER.debug("status refresh skipped: %s", err)
+                    return self.data
+                raise UpdateFailed(str(err)) from err
             except GacError as err:
                 raise UpdateFailed(str(err)) from err

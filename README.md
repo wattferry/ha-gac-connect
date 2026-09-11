@@ -93,8 +93,9 @@ dashboard via Dashboards → Add Dashboard → Edit → Raw configuration editor
 
 It covers battery, range, odometer and report freshness; charging state with
 power, current and voltage while charging; the remote controls; locks, openings,
-cabin temperature and air quality; tyre pressures and temperatures; and
-location. The file's header comments explain how to switch tyre pressure to psi,
+cabin temperature and air quality; tyre pressures and temperatures; location;
+and, on cars that have one, the fridge (on/off, mode, temperature and the
+keep-running setting). The file's header comments explain how to switch tyre pressure to psi,
 enable location tracking, and remove the cards that send commands to the car.
 
 ## Command results
@@ -120,7 +121,26 @@ door / window / boot left open — are in
 ## Options
 
 Poll interval, quiet hours (skip polling overnight to spare the 12 V battery),
-whether the location tracker is enabled, and how long an A/C run lasts.
+whether the location tracker is enabled, and how long an A/C run lasts. The poll
+interval is at least 60 seconds (default 5 minutes).
+
+## Request limits
+
+The integration is built to go easy on GAC's service. Status is polled on the
+interval above (never more often than once a minute); refresh presses and the
+refreshes that follow commands are merged, and refreshes triggered by command
+results are at least 10 seconds apart. Underneath, every request goes through the
+`gac-connect` library's limiter, shared by all GAC Connect entries in Home
+Assistant: one request at a time, at most one a second, 20 a minute, 240 an hour
+and 3000 a day, with commands to the car limited to 6 a minute and 60 an hour. If
+the service answers "too many requests", nothing is sent for at least a minute
+(longer if the service says so, up to a day).
+A request held back by these limits is not sent at all: the entities keep their
+last reading, and a command shows an error. The limiter's state is kept in Home
+Assistant's storage, so a restart does not reset it or cut short a pause the
+service asked for. (If that saved state is ever unreadable, requests pause for a
+day, since any pause recorded in it is unknown; deleting
+`.storage/gac_connect.request_limits` and restarting resets it.)
 
 ## Notes
 
@@ -144,6 +164,18 @@ EV brands into Home Assistant and Python, among them:
 Thanks to their authors for showing what a good community integration looks like.
 
 ## Changes
+
+- **0.2.0b11** — request limits: every request goes through the library's shared
+  limiter (one at a time, rolling budgets, a pause after any "too many requests"
+  answer); refreshes triggered by command results are at least 10 seconds apart;
+  a refresh held back by the limits keeps the last reading instead of going
+  unavailable; a stored poll interval under a minute is raised to one minute; the
+  limits are kept across restarts.
+  Signing in again after the session expires now updates the existing entry (it
+  used to stop at "already set up"). Sign-in shows a clear message when requests
+  are being held back. Quiet hours follow Home Assistant's time zone. The example
+  dashboard's Fridge section notes which tiles send commands and shows Time left
+  only with a timed setting. Requires `gac-connect` 0.2.0b9.
 
 - **0.2.0b10** — two fridge sensors: *Fridge after leaving* (the car's
   keep-running setting, timed or unlimited) and *Fridge time left* (minutes left

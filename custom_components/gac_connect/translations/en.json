@@ -32,11 +32,16 @@
     },
     "error": {
       "cannot_connect": "Could not reach GAC. Check your connection and try again.",
-      "invalid_code": "That code was not accepted. Request a new one and try again."
+      "invalid_code": "That code was not accepted. Request a new one and try again.",
+      "rate_limited": "Too many requests to GAC just now. Wait a minute and try again."
     },
     "abort": {
       "already_configured": "This vehicle is already set up.",
-      "no_vehicles": "No vehicles were found on this account."
+      "no_vehicles": "No vehicles were found on this account.",
+      "rate_limited": "Too many requests to GAC just now. Wait a minute, then start again.",
+      "cannot_connect": "Could not reach GAC. Check your connection and try again.",
+      "wrong_vehicle": "This account does not have the vehicle this entry is for. Sign in with the account that owns it.",
+      "reauth_successful": "Signed in again. The integration is reloading."
     }
   },
   "options": {
