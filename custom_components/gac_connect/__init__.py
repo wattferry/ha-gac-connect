@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_REGION, CONF_VIN, DOMAIN, PLATFORMS
 from .coordinator import ConfigEntryStore, GacCoordinator
-from .fridge import FridgeController, store_key
+from .fridge import FridgeController, controls_enabled, remove_entities, store_key
 from .helpers import async_build_client
 
 type GacConfigEntry = ConfigEntry[GacRuntime]
@@ -36,6 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GacConfigEntry) -> bool:
     await client.load()
 
     _remove_retired_entities(hass, entry)
+    if not controls_enabled(entry):
+        remove_entities(hass, entry)
     coordinator = GacCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 

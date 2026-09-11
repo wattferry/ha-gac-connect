@@ -76,7 +76,8 @@ takes.
   in the car: *Fridge after leaving* shows it as timed or unlimited, and with a
   timed setting *Fridge time left* counts down in minutes once you leave. An
   automation can watch the switch and attempt a restart. The entities appear once
-  the car first reports a fridge.
+  the car first reports a fridge. If your car has no fridge but they show up
+  anyway, turn off *Fridge / warmer box controls* in the options to remove them.
 - **Location tracker** (off by default — enable it in the integration's options).
 
 ## Example dashboard
@@ -121,8 +122,9 @@ door / window / boot left open — are in
 ## Options
 
 Poll interval, quiet hours (skip polling overnight to spare the 12 V battery),
-whether the location tracker is enabled, and how long an A/C run lasts. The poll
-interval is at least 60 seconds (default 5 minutes).
+whether the location tracker is enabled, whether the fridge controls are shown,
+and how long an A/C run lasts. The poll interval is at least 60 seconds (default
+5 minutes).
 
 ## Request limits
 
