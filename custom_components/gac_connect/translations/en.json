@@ -51,9 +51,13 @@
         "data": {
           "scan_interval": "Poll interval (seconds)",
           "enable_tracker": "Enable location tracking",
+          "enable_fridge": "Fridge / warmer box controls",
           "quiet_start": "Quiet hours start (HH:MM, optional)",
           "quiet_end": "Quiet hours end (HH:MM, optional)",
           "ac_minutes": "A/C run time (minutes)"
+        },
+        "data_description": {
+          "enable_fridge": "Shown when the car reports a fridge. Turn off to remove them, for example on a trim without one."
         }
       }
     }

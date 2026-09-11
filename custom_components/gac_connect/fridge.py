@@ -24,11 +24,12 @@ from gac_connect.push import PushResult
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, SIGNAL_COMMAND_RESULT
+from .const import CONF_ENABLE_FRIDGE, CONF_VIN, DEFAULT_ENABLE_FRIDGE, DOMAIN, SIGNAL_COMMAND_RESULT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +38,11 @@ OPTIONS: tuple[str, ...] = ("off", *RUNNING_MODES)
 RESULT_EVENTS: tuple[str, ...] = ("control_refrigerator",)
 REQUEST_SECONDS = 180      # a requested state overrides the car's report at most this long
 STORE_VERSION = 1
+# (platform, unique-id suffix) of every fridge entity
+ENTITIES: tuple[tuple[str, str], ...] = (
+    ("switch", "fridge"), ("select", "fridge_mode"), ("number", "fridge_temperature"),
+    ("sensor", "fridge_keep_mode"), ("sensor", "fridge_time_left"),
+)
 
 
 def store_key(entry_id: str) -> str:
@@ -45,6 +51,21 @@ def store_key(entry_id: str) -> str:
 
 def fitted(coordinator) -> bool:
     return bool(coordinator.data is not None and getattr(coordinator.data, "fridge_fitted", False))
+
+
+def controls_enabled(entry: ConfigEntry) -> bool:
+    """Owners can hide the controls, e.g. on a car that reports a fridge it doesn't have."""
+    return bool(entry.options.get(CONF_ENABLE_FRIDGE, DEFAULT_ENABLE_FRIDGE))
+
+
+@callback
+def remove_entities(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Drop the fridge entities from the registry once the controls are switched off."""
+    registry = er.async_get(hass)
+    for domain, key in ENTITIES:
+        entity_id = registry.async_get_entity_id(domain, DOMAIN, f"{entry.data[CONF_VIN]}_{key}")
+        if entity_id:
+            registry.async_remove(entity_id)
 
 
 def _in_range(mode: Any, t: Any) -> bool:
@@ -343,6 +364,8 @@ def controller(coordinator) -> FridgeController:
 
 def async_add_when_fitted(entry: ConfigEntry, coordinator, add_entities, make: Callable[[], list]) -> None:
     """Add the fridge entities now if the car has one, or when a report first shows one."""
+    if not controls_enabled(entry):
+        return
     if fitted(coordinator):
         add_entities(make())
         return

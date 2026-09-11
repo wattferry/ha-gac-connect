@@ -29,6 +29,7 @@ from .captcha_view import CAPTCHA_URL, GacCaptchaView, flow_state
 from .helpers import async_build_client
 from .const import (
     CONF_AC_MINUTES,
+    CONF_ENABLE_FRIDGE,
     CONF_ENABLE_TRACKER,
     CONF_MOBILE,
     CONF_MODEL,
@@ -37,6 +38,7 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_SESSION,
     CONF_VIN,
+    DEFAULT_ENABLE_FRIDGE,
     DEFAULT_ENABLE_TRACKER,
     DEFAULT_AC_MINUTES,
     DEFAULT_SCAN_INTERVAL,
@@ -200,6 +202,8 @@ class GacOptionsFlow(OptionsFlow):
                 vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL)),
             vol.Optional(CONF_ENABLE_TRACKER,
                          default=opts.get(CONF_ENABLE_TRACKER, DEFAULT_ENABLE_TRACKER)): bool,
+            vol.Optional(CONF_ENABLE_FRIDGE,
+                         default=opts.get(CONF_ENABLE_FRIDGE, DEFAULT_ENABLE_FRIDGE)): bool,
             vol.Optional(CONF_QUIET_START, default=opts.get(CONF_QUIET_START, "")): str,
             vol.Optional(CONF_QUIET_END, default=opts.get(CONF_QUIET_END, "")): str,
             vol.Optional(CONF_AC_MINUTES, default=opts.get(CONF_AC_MINUTES, DEFAULT_AC_MINUTES)):
