@@ -28,13 +28,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GacConfigEntry
+from . import GacConfigEntry, fridge
 from .entity import GacEntity
 
 
 @dataclass(frozen=True, kw_only=True)
 class GacSensor(SensorEntityDescription):
-    value: Callable[[VehicleStatus], float | int | None]
+    value: Callable[[VehicleStatus], str | float | int | datetime | None]
 
 
 SENSORS: tuple[GacSensor, ...] = (
@@ -86,6 +86,17 @@ SENSORS: tuple[GacSensor, ...] = (
 )
 
 
+# Only on cars that report a fridge / warmer box.
+FRIDGE_SENSORS: tuple[GacSensor, ...] = (
+    GacSensor(key="fridge_keep_mode", translation_key="fridge_keep_mode", icon="mdi:fridge-alert-outline",
+              device_class=SensorDeviceClass.ENUM, options=["timed", "unlimited"],
+              value=lambda s: s.fridge_keep_mode),
+    GacSensor(key="fridge_time_left", translation_key="fridge_time_left", icon="mdi:timer-sand",
+              device_class=SensorDeviceClass.DURATION, native_unit_of_measurement=UnitOfTime.MINUTES,
+              value=lambda s: s.fridge_keep_minutes),
+)
+
+
 def _tyre_sensors() -> tuple[GacSensor, ...]:
     out: list[GacSensor] = []
     for i in range(4):
@@ -109,6 +120,8 @@ async def async_setup_entry(
 ) -> None:
     coordinator = entry.runtime_data.coordinator
     add_entities(GacSensorEntity(coordinator, d) for d in (*SENSORS, *_tyre_sensors()))
+    fridge.async_add_when_fitted(
+        entry, coordinator, add_entities, lambda: [GacSensorEntity(coordinator, d) for d in FRIDGE_SENSORS])
 
 
 class GacSensorEntity(GacEntity, SensorEntity):

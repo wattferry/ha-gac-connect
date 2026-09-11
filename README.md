@@ -72,9 +72,11 @@ takes.
   across restarts. Changing the temperature while the fridge runs sends it
   straight away; while it is off the value is kept for the next start. A request
   shows at once and reverts if the car refuses it or has not confirmed it within
-  three minutes. How long the fridge keeps running after you leave the car depends
-  on the car; an automation can watch the switch and attempt a restart. The
-  entities appear once the car first reports a fridge.
+  three minutes. How long it keeps running after you leave the car is a setting
+  in the car: *Fridge after leaving* shows it as timed or unlimited, and with a
+  timed setting *Fridge time left* counts down in minutes once you leave. An
+  automation can watch the switch and attempt a restart. The entities appear once
+  the car first reports a fridge.
 - **Location tracker** (off by default — enable it in the integration's options).
 
 ## Example dashboard
@@ -142,6 +144,11 @@ EV brands into Home Assistant and Python, among them:
 Thanks to their authors for showing what a good community integration looks like.
 
 ## Changes
+
+- **0.2.0b10** — two fridge sensors: *Fridge after leaving* (the car's
+  keep-running setting, timed or unlimited) and *Fridge time left* (minutes left
+  on a timed setting). Requires `gac-connect` 0.2.0b8. Added to the example
+  dashboard's Fridge section.
 
 - **0.2.0b9** — fridge / warmer box on cars that have one: switch, mode
   selector and target temperature, sharing one command queue and remembering the

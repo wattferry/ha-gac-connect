@@ -217,6 +217,13 @@ views:
             features:
               - type: numeric-input
                 style: buttons
+          # The keep-running setting is changed in the car; these only report it.
+          - type: tile
+            entity: sensor.aion_v_fridge_after_leaving
+            name: After leaving
+          - type: tile
+            entity: sensor.aion_v_fridge_time_left
+            name: Time left
 
       - type: grid
         cards:

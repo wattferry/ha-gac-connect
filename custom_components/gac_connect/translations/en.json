@@ -117,6 +117,16 @@
       },
       "charge_voltage": {
         "name": "Charge voltage"
+      },
+      "fridge_keep_mode": {
+        "name": "Fridge after leaving",
+        "state": {
+          "timed": "Timed",
+          "unlimited": "Unlimited"
+        }
+      },
+      "fridge_time_left": {
+        "name": "Fridge time left"
       }
     },
     "binary_sensor": {
