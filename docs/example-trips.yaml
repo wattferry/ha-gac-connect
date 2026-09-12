@@ -15,8 +15,10 @@
 #
 # HOW TO USE
 #   1. Your entity IDs start with your vehicle's name. This example uses
-#      `aion_v` (an "AION V"). If yours differ, find-and-replace `aion_v` with
-#      your prefix (Developer Tools → States, filter "gac" or your model).
+#      `aion_v` (an "AION V"). If yours differ, find-and-replace BOTH `aion_v`
+#      (the entity IDs) AND `Aion V` (the names these sensors are created from,
+#      which set their entity IDs) with your prefix. Developer Tools → States,
+#      filter "gac" or your model, shows the IDs your car uses.
 #   2. Set PACK_KWH below to your battery's usable capacity in kWh. The value
 #      here is only an example; take yours from your car's documentation.
 #   3. Save this file as `packages/gac_trips.yaml` in your config folder and make
@@ -26,12 +28,20 @@
 #   4. Restart Home Assistant.
 #
 # HOW CONSUMPTION IS ESTIMATED
-#   Energy used = how far the battery level drops × PACK_KWH. Charging is not
-#   counted (the energy meters ignore rises), but everything that drains the
-#   battery is, including while the car is parked: pre-conditioning, the fridge,
-#   standby. The averages therefore read a little higher than the car's own trip
-#   computer, and they are only as accurate as PACK_KWH and the reported battery
-#   percentage. Consumption stays Unknown until at least 5 km are counted.
+#   Energy used = the drop in battery level between readings × PACK_KWH. It is an
+#   estimate from the battery percentage Home Assistant happens to observe, not a
+#   measured figure, so treat it as a rough guide:
+#     - Charging is not counted (the meter ignores the level rising), but any
+#       drain between readings is, including while parked (pre-conditioning, the
+#       fridge, standby).
+#     - A drive and a recharge that both fall between two readings are missed, so
+#       energy can be under-counted while the distance still counts.
+#     - The battery percentage is coarse and rounded, and readings can straddle a
+#       week/month boundary, so a period's figure can be off either way.
+#   It is only as accurate as PACK_KWH and the reported percentage, and assumes
+#   the odometer reads in kilometres (the integration reports km; if you have
+#   switched that entity to miles, the kWh/100km figure will be wrong). Stays
+#   Unknown until at least 5 km are counted.
 #
 #   NOTE: this average is Home Assistant's estimate, not the car's figure. The
 #   API has an average-consumption field, but it does not match the trip
@@ -60,7 +70,6 @@ template:
       - name: Aion V consumption this week
         unique_id: aion_v_consumption_this_week
         unit_of_measurement: kWh/100km
-        device_class: energy_distance
         state_class: measurement
         state: >-
           {% set e = states('sensor.aion_v_energy_this_week') | float(none) %}
@@ -70,7 +79,6 @@ template:
       - name: Aion V consumption this month
         unique_id: aion_v_consumption_this_month
         unit_of_measurement: kWh/100km
-        device_class: energy_distance
         state_class: measurement
         state: >-
           {% set e = states('sensor.aion_v_energy_this_month') | float(none) %}
@@ -80,7 +88,6 @@ template:
       - name: Aion V consumption this year
         unique_id: aion_v_consumption_this_year
         unit_of_measurement: kWh/100km
-        device_class: energy_distance
         state_class: measurement
         state: >-
           {% set e = states('sensor.aion_v_energy_this_year') | float(none) %}
@@ -90,7 +97,6 @@ template:
       - name: Aion V consumption overall
         unique_id: aion_v_consumption_overall
         unit_of_measurement: kWh/100km
-        device_class: energy_distance
         state_class: measurement
         state: >-
           {% set e = states('sensor.aion_v_energy_tracked') | float(none) %}

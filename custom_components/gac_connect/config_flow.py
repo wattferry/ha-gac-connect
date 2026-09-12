@@ -197,7 +197,7 @@ class GacOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
         if user_input is not None:
             picture = (user_input.get(CONF_PICTURE) or "").strip()
-            if picture and not picture.startswith(("/", "http://", "https://")):
+            if picture and not (picture.startswith("/") or picture.lower().startswith(("http://", "https://"))):
                 errors[CONF_PICTURE] = "invalid_picture"
             else:
                 return self.async_create_entry(data={**user_input, CONF_PICTURE: picture})

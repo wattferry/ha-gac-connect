@@ -5,6 +5,8 @@ initials: the one set in the options, or else a bundled render for the model.
 """
 from __future__ import annotations
 
+import asyncio
+import logging
 from pathlib import Path
 
 from homeassistant.components.device_tracker import TrackerEntity
@@ -17,11 +19,14 @@ from .const import CONF_ENABLE_TRACKER, CONF_MODEL, CONF_PICTURE, DEFAULT_ENABLE
 from .coordinator import GacCoordinator
 from .entity import GacEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 PICTURES_URL = f"/{DOMAIN}/pictures"
 _PICTURES_DIR = Path(__file__).parent / "pictures"
 # model name as the service reports it (lower case) -> bundled picture
 _BUNDLED: dict[str, str] = {"aion v": "aion-v.png"}
 _REGISTERED = f"{DOMAIN}_pictures_registered"
+_REGISTER_LOCK = f"{DOMAIN}_pictures_lock"
 
 
 async def async_setup_entry(
@@ -41,11 +46,27 @@ async def _async_picture(hass: HomeAssistant, entry: GacConfigEntry) -> str | No
     http = getattr(hass, "http", None)
     if name is None or http is None:
         return None
-    if not hass.data.get(_REGISTERED):
-        hass.data[_REGISTERED] = True
-        await http.async_register_static_paths(
-            [StaticPathConfig(PICTURES_URL, str(_PICTURES_DIR), cache_headers=False)])
+    if not await _ensure_pictures_served(hass, http):
+        return None      # could not serve the file; fall back to the entity initials
     return f"{PICTURES_URL}/{name}"
+
+
+async def _ensure_pictures_served(hass: HomeAssistant, http) -> bool:
+    """Register the bundled-pictures path once, retrying on a later call if it fails."""
+    if hass.data.get(_REGISTERED):
+        return True
+    lock = hass.data.setdefault(_REGISTER_LOCK, asyncio.Lock())
+    async with lock:
+        if hass.data.get(_REGISTERED):
+            return True
+        try:
+            await http.async_register_static_paths(
+                [StaticPathConfig(PICTURES_URL, str(_PICTURES_DIR), cache_headers=False)])
+        except Exception:  # noqa: BLE001 — a picture is cosmetic; never block the tracker
+            _LOGGER.debug("could not register the car-picture path; using entity initials", exc_info=True)
+            return False
+        hass.data[_REGISTERED] = True      # only after it actually succeeded
+        return True
 
 
 class GacDeviceTracker(GacEntity, TrackerEntity):

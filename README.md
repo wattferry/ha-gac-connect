@@ -113,11 +113,12 @@ sensors: kilometres driven this week, this month and this year, counted by Home
 Assistant from the odometer readings, and the average consumption over each
 (kWh/100 km). The example dashboard's Trips & consumption section shows them.
 
-Consumption is estimated from how far the battery level drops, times a pack size
-you set in the file. Charging is not counted, but energy used while the car is
-parked is (pre-conditioning, the fridge), so the averages read a little higher
-than the car's own. Totals start when you add the package; the file explains how
-to start the overall average from your car's trip computer instead.
+Consumption is estimated from the drop in battery level between readings, times a
+pack size you set in the file — an estimate from the percentages Home Assistant
+observes, not a measured figure. Charging is not counted; drain while parked is;
+and a drive-plus-recharge between two readings is missed, so a period can read
+high or low. Totals start when you add the package; the file explains how to
+start the overall average from your car's trip computer instead.
 
 **Note:** the average consumption is Home Assistant's estimate, not the car's
 figure. The API has an average-consumption field, but it does not match the
@@ -190,6 +191,12 @@ EV brands into Home Assistant and Python, among them:
 Thanks to their authors for showing what a good community integration looks like.
 
 ## Changes
+
+- **0.2.0b12** — community contributions from @panosru: Greece (`GR`) region;
+  an option to hide the fridge controls (for trims that report a fridge but have
+  none); the location tracker now shows a picture of the car on the map (a
+  bundled AION V render or your own image); and an example trips-and-consumption
+  package (`docs/example-trips.yaml`). Requires `gac-connect` 0.2.0b10.
 
 - **0.2.0b11** — request limits: every request goes through the library's shared
   limiter (one at a time, rolling budgets, a pause after any "too many requests"
