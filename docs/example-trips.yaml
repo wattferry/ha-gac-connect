@@ -70,6 +70,7 @@ template:
       - name: Aion V consumption this week
         unique_id: aion_v_consumption_this_week
         unit_of_measurement: kWh/100km
+        device_class: energy_distance
         state_class: measurement
         state: >-
           {% set e = states('sensor.aion_v_energy_this_week') | float(none) %}
@@ -79,6 +80,7 @@ template:
       - name: Aion V consumption this month
         unique_id: aion_v_consumption_this_month
         unit_of_measurement: kWh/100km
+        device_class: energy_distance
         state_class: measurement
         state: >-
           {% set e = states('sensor.aion_v_energy_this_month') | float(none) %}
@@ -88,6 +90,7 @@ template:
       - name: Aion V consumption this year
         unique_id: aion_v_consumption_this_year
         unit_of_measurement: kWh/100km
+        device_class: energy_distance
         state_class: measurement
         state: >-
           {% set e = states('sensor.aion_v_energy_this_year') | float(none) %}
@@ -97,6 +100,7 @@ template:
       - name: Aion V consumption overall
         unique_id: aion_v_consumption_overall
         unit_of_measurement: kWh/100km
+        device_class: energy_distance
         state_class: measurement
         state: >-
           {% set e = states('sensor.aion_v_energy_tracked') | float(none) %}

@@ -196,7 +196,8 @@ Thanks to their authors for showing what a good community integration looks like
   an option to hide the fridge controls (for trims that report a fridge but have
   none); the location tracker now shows a picture of the car on the map (a
   bundled AION V render or your own image); and an example trips-and-consumption
-  package (`docs/example-trips.yaml`). Requires `gac-connect` 0.2.0b10.
+  package (`docs/example-trips.yaml`). Requires `gac-connect` 0.2.0b10 and
+  Home Assistant 2025.2 or newer.
 
 - **0.2.0b11** — request limits: every request goes through the library's shared
   limiter (one at a time, rolling budgets, a pause after any "too many requests"
