@@ -192,6 +192,14 @@ Thanks to their authors for showing what a good community integration looks like
 
 ## Changes
 
+- **0.3.0b1** — requires `gac-connect` 0.3.0b1, which stops the official app and
+  this integration from signing each other out. After you sign in, a later app
+  sign-in no longer ends the session; signing in here still signs the app out
+  once, and you sign the app back in. If the integration was signing out whenever
+  you used the phone app, **re-authenticate once** to pick up the fix. The library
+  also now supports every region the service supports, Israel (`IL`) among
+  them (reported working). Requires Home Assistant 2025.2 or newer.
+
 - **0.2.0b12** — community contributions from @panosru: Greece (`GR`) region;
   an option to hide the fridge controls (for trims that report a fridge but have
   none); the location tracker now shows a picture of the car on the map (a
