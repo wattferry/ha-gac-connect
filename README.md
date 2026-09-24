@@ -146,7 +146,7 @@ door / window / boot left open — are in
 
 ## Options
 
-Poll interval, quiet hours (skip polling overnight to spare the 12 V battery),
+Poll interval, quiet hours (skip polling overnight),
 whether the location tracker is enabled, whether the fridge controls are shown,
 the car's picture on the map (an image URL or a `/local/` path), and how long an
 A/C run lasts. The poll interval is at least 60 seconds (default 5 minutes).
