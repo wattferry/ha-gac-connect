@@ -100,7 +100,11 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
             "attempt": 1,
             "status": "pending",
         }
-        base = get_url(self.hass, prefer_external=False, allow_ip=True)
+        # This URL is opened in the user's own browser, so it must be one the
+        # browser can resolve. Prefer the external URL and fall back to internal;
+        # the previous internal-only choice handed cluster-internal DNS to browsers
+        # on Kubernetes / reverse-proxy setups, which they cannot resolve.
+        base = get_url(self.hass, prefer_external=True, allow_internal=True, allow_ip=True)
         return self.async_external_step(step_id="captcha", url=f"{base}{CAPTCHA_URL}?flow_id={self.flow_id}")
 
     # ---- step 3: SMS code ------------------------------------------------
