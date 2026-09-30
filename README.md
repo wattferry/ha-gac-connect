@@ -192,6 +192,12 @@ Thanks to their authors for showing what a good community integration looks like
 
 ## Changes
 
+- **0.4.0b1** — requires `gac-connect` 0.4.0b1, which adds support for markets that
+  run a separate national app. **United Kingdom (`GB`)** now works, using the
+  My AION app and its own backend; select `GB` when adding the integration. Israel
+  (`IL`) is added to the region list too. UK sign-in is still being confirmed by a
+  UK user, so treat `GB` as best-effort for now. Requires Home Assistant 2025.2+.
+
 - **0.3.0b1** — requires `gac-connect` 0.3.0b1, which stops the official app and
   this integration from signing each other out. After you sign in, a later app
   sign-in no longer ends the session; signing in here still signs the app out
