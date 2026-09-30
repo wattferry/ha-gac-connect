@@ -16,7 +16,7 @@ import asyncio
 import aiohttp
 from gac_connect.client import GacClient
 from gac_connect.keys import Material, load_material
-from gac_connect.const import RECOVERY_PAUSE
+from gac_connect.const import PROFILE_MATERIAL, RECOVERY_PAUSE, REGIONS
 from gac_connect.limits import DEFAULT_LIMITER
 from gac_connect.session import TokenStore
 
@@ -68,5 +68,10 @@ async def async_build_client(
     store: TokenStore | None = None,
 ) -> GacClient:
     await async_setup_limits(hass)
-    material: Material = await hass.async_add_executor_job(load_material)
+    # A region may run on a separate national app's backend (see gac_connect's
+    # "profile" mechanism), which needs that profile's own material bundle, not
+    # GAC International's — passing the wrong one here signs every request with
+    # the wrong key and the backend rejects it outright.
+    bundle = PROFILE_MATERIAL[REGIONS[region]["profile"]]
+    material: Material = await hass.async_add_executor_job(load_material, bundle)
     return GacClient(region, http, store, material=material)
