@@ -192,6 +192,13 @@ Thanks to their authors for showing what a good community integration looks like
 
 ## Changes
 
+- **0.4.0b2** — fixes **UK (`GB`) sign-in**, which failed at the very first step
+  with a signature error and never showed the slide puzzle. The integration was
+  loading GAC International's key material for every region instead of the one the
+  region's own app uses, so UK requests were signed with the wrong key and the
+  backend rejected them. `GB` now signs with the My AION material. No change for
+  other regions. Still requires `gac-connect` 0.4.0b1 and Home Assistant 2025.2+.
+
 - **0.4.0b1** — requires `gac-connect` 0.4.0b1, which adds support for markets that
   run a separate national app. **United Kingdom (`GB`)** now works, using the
   My AION app and its own backend; select `GB` when adding the integration. Israel
