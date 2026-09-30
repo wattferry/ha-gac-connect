@@ -106,11 +106,19 @@ class GacCaptchaView(HomeAssistantView):
                 return web.json_response({"ok": False, "retry": True})
             try:
                 await client.request_sms(state["mobile"], x)
-            except (CaptchaError, LoginError):
+            except CaptchaError:
                 # wrong slide (or a bad ticket) — hand back a fresh puzzle
                 state["need_new"] = True
                 await _new_puzzle(client, state)
                 return web.json_response({"ok": False, "retry": True})
+            except LoginError as err:
+                # The puzzle was accepted but sign-in itself was refused — e.g. the
+                # number is not registered on this region's backend (a UK/AION Auto
+                # account lives on a different platform this library does not support).
+                # A fresh puzzle cannot help, so show the reason and stop rather than
+                # looping as if the slide were wrong.
+                state["status"], state["msg"] = "failed", str(err)
+                return web.json_response({"ok": False, "failed": True})
         except RateLimitedError as err:
             wait = int(err.retry_after or 60)
             _notice(state, f"Too many requests to GAC just now. Wait {wait} s, then press Verify again.", wait)
