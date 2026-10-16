@@ -17,6 +17,37 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import CONF_MODEL, DOMAIN, SIGNAL_COMMAND_RESULT
 from .coordinator import GacCoordinator
 
+# Some markets report `model` as a plain name string; others (e.g. the UK My AION
+# backend) report it as a numeric code. Only codes confirmed against a real
+# vehicle are listed here. An unconfirmed code is deliberately NOT guessed.
+_CONFIRMED_MODELS: dict[str, str] = {
+    "1": "AION V",
+}
+
+
+def _device_name_and_model(raw: object) -> tuple[str, str | None]:
+    """Resolve the device name and a string model from the stored `model` value.
+
+    The device registry requires strings, and some backends send an int, which
+    otherwise crashes entity setup (``TypeError: sequence item 0: expected str
+    instance, int found``). A plain name string is used as-is; a numeric code is
+    mapped only if confirmed in ``_CONFIRMED_MODELS``. An unrecognised code raises
+    rather than mislabelling an unknown vehicle as one we happen to know.
+    """
+    if raw is None or (isinstance(raw, str) and not raw.strip()):
+        return "Aion", None
+    if isinstance(raw, str) and not raw.strip().isdigit():
+        name = raw.strip()
+        return name, name
+    code = str(raw).strip()
+    if code in _CONFIRMED_MODELS:
+        return _CONFIRMED_MODELS[code], code
+    raise ValueError(
+        f"Unrecognised vehicle model code {code!r}. Only {sorted(_CONFIRMED_MODELS)} "
+        "are confirmed; refusing to guess the model of an unknown vehicle. Please "
+        "report this code at https://github.com/wattferry/ha-gac-connect/issues."
+    )
+
 
 class GacEntity(CoordinatorEntity[GacCoordinator]):
     _attr_has_entity_name = True
@@ -24,11 +55,12 @@ class GacEntity(CoordinatorEntity[GacCoordinator]):
     def __init__(self, coordinator: GacCoordinator, key: str) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.vin}_{key}"
+        name, model = _device_name_and_model(coordinator.config_entry.data.get(CONF_MODEL))
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.vin)},
             manufacturer="GAC Aion",
-            name=coordinator.config_entry.data.get(CONF_MODEL) or "Aion",
-            model=coordinator.config_entry.data.get(CONF_MODEL),
+            name=name,
+            model=model,
             serial_number=coordinator.vin,
         )
 
