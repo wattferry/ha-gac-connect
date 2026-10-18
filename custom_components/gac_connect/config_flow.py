@@ -27,6 +27,7 @@ from homeassistant.helpers.network import get_url
 
 from .captcha_view import CAPTCHA_URL, GacCaptchaView, flow_state
 from .helpers import async_build_client
+from .model_names import UnrecognisedModelCode, resolve_model_name
 from .const import (
     CONF_AC_MINUTES,
     CONF_ENABLE_FRIDGE,
@@ -153,17 +154,35 @@ class GacConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(vin)
             self._abort_if_unique_id_configured()
             veh = by_vin[vin]
+            # Some markets (the UK) report `model` as a numeric code rather than
+            # a name; resolve it once, here, rather than guessing an unrecognised
+            # one later behind a confusing error.
+            try:
+                model_name = resolve_model_name(veh.model)
+            except UnrecognisedModelCode:
+                return self.async_abort(reason="unrecognised_model")
             return self.async_create_entry(
-                title=veh.model or f"Aion {vin[-4:]}",
+                title=model_name or f"Aion {vin[-4:]}",
                 data={
                     CONF_REGION: self._region,
                     CONF_MOBILE: self._mobile,
                     CONF_VIN: vin,
-                    CONF_MODEL: veh.model,
+                    CONF_MODEL: model_name,
                     CONF_SESSION: self._client.session.to_dict(),
                 },
             )
-        options = {v.vin: f"{v.model or 'Aion'} ({v.plate or v.vin[-4:]})" for v in vehicles}
+        def _picker_label(v: Any) -> str:
+            # This label is informational only (no entry is created from it
+            # yet), so an unrecognised model code falls back to showing the
+            # raw value rather than blocking the picker over a vehicle the
+            # user may not even select.
+            try:
+                name = resolve_model_name(v.model)
+            except UnrecognisedModelCode:
+                name = str(v.model)
+            return f"{name or 'Aion'} ({v.plate or v.vin[-4:]})"
+
+        options = {v.vin: _picker_label(v) for v in vehicles}
         return self.async_show_form(
             step_id="vehicle", data_schema=vol.Schema({vol.Required(CONF_VIN): vol.In(options)}),
         )

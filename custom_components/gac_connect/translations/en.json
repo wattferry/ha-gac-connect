@@ -41,7 +41,8 @@
       "rate_limited": "Too many requests to GAC just now. Wait a minute, then start again.",
       "cannot_connect": "Could not reach GAC. Check your connection and try again.",
       "wrong_vehicle": "This account does not have the vehicle this entry is for. Sign in with the account that owns it.",
-      "reauth_successful": "Signed in again. The integration is reloading."
+      "reauth_successful": "Signed in again. The integration is reloading.",
+      "unrecognised_model": "Could not recognise this vehicle's model. Please report this at the issue tracker so it can be added."
     }
   },
   "options": {
