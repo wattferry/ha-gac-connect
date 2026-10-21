@@ -9,20 +9,22 @@ process-wide request limiter. Its state is kept in Home Assistant's storage and
 restored before the first client is built, so a restart does not reset the
 budgets or cut short a pause the service asked for.
 """
+
 from __future__ import annotations
 
 import asyncio
 
 import aiohttp
-from gac_connect.client import GacClient
-from gac_connect.keys import Material, load_material
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
+
 from gac_connect.const import PROFILE_MATERIAL, RECOVERY_PAUSE, REGIONS
+from gac_connect.keys import Material, load_material
 from gac_connect.limits import DEFAULT_LIMITER
 from gac_connect.session import TokenStore
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.storage import Store
-
+from .api import GacClient
 from .const import DOMAIN
 
 LIMITS_KEY = f"{DOMAIN}.request_limits"
@@ -34,7 +36,7 @@ async def async_setup_limits(hass: HomeAssistant) -> None:
     task: asyncio.Task | None = hass.data.get(_LIMITS_READY)
     if task is None or (task.done() and (task.cancelled() or task.exception() is not None)):
         task = hass.data[_LIMITS_READY] = hass.async_create_task(_restore_limits(hass))
-    await asyncio.shield(task)   # a caller that gives up does not cancel the restore
+    await asyncio.shield(task)  # a caller that gives up does not cancel the restore
 
 
 async def _restore_limits(hass: HomeAssistant) -> None:
@@ -53,12 +55,32 @@ async def _restore_limits(hass: HomeAssistant) -> None:
 
     @callback
     def _changed(urgent: bool) -> None:
-        if urgent:      # a pause the service asked for is written straight away
+        if urgent:  # a pause the service asked for is written straight away
             hass.async_create_task(store.async_save(DEFAULT_LIMITER.export_state()))
         else:
             store.async_delay_save(DEFAULT_LIMITER.export_state, 10)
 
     DEFAULT_LIMITER.on_change = _changed
+
+
+# Zones HA reports when none was chosen; the car's region is then the better guess.
+_UNSET_ZONES = frozenset({"UTC", "Etc/UTC", "GMT", "Etc/GMT", "Universal", "Etc/Universal", "Zulu", "Etc/Zulu"})
+
+
+async def async_client_timezone(hass: HomeAssistant, region: str) -> str:
+    """HA's time zone for charge schedules and request headers, else the region's own.
+
+    The region table has one zone per country, which is wrong for much of a country
+    that spans several (Australia, Brazil, Mexico, ...); HA's zone is where the car
+    most likely is. A zone that looks unset (UTC) or unknown falls back to the
+    region's. The zone is loaded here, off the event loop, before the client uses it.
+    """
+    zone = hass.config.time_zone
+    if isinstance(zone, str) and zone not in _UNSET_ZONES and await dt_util.async_get_time_zone(zone) is not None:
+        return zone
+    zone = REGIONS[region]["tz"]
+    await dt_util.async_get_time_zone(zone)
+    return zone
 
 
 async def async_build_client(
@@ -74,4 +96,4 @@ async def async_build_client(
     # the wrong key and the backend rejects it outright.
     bundle = PROFILE_MATERIAL[REGIONS[region]["profile"]]
     material: Material = await hass.async_add_executor_job(load_material, bundle)
-    return GacClient(region, http, store, material=material)
+    return GacClient(region, http, store, material=material, timezone=await async_client_timezone(hass, region))

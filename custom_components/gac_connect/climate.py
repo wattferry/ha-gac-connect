@@ -1,182 +1,184 @@
-"""Climate: remote cabin pre-conditioning (A/C, auto mode) with a target temperature.
+"""Remote cabin A/C with a shared temperature selection and command queue."""
 
-The car reports whether the A/C is running and its setpoint, so the entity shows
-real state; right after a command it shows the requested state until the next
-poll confirms it. A run lasts the "A/C run time" option (default 30 minutes).
-"""
 from __future__ import annotations
 
-import asyncio
-from time import monotonic
+import math
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.components.climate.const import ATTR_HVAC_MODE
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-import logging
-
-from gac_connect import command_session_id
-from gac_connect.push import PushResult
-
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GacConfigEntry
-from .const import CONF_AC_MINUTES, DEFAULT_AC_MINUTES
+from . import GacConfigEntry, cabin
 from .coordinator import GacCoordinator
 from .entity import GacEntity
+from .entity_filter import add_configured_entities
 
-_LOGGER = logging.getLogger(__name__)
+PRESET_HEATING, PRESET_COOLING = "heating", "cooling"
+# Outlet codes calibrated on an Aion UT's console; 1–4 also worked remotely there. Each is
+# offered where the car's capability list includes it, and console reports can show the rest.
+AIRFLOW_NAMES = {1: "cabin", 2: "cabin_feet", 3: "feet", 4: "feet_windscreen", 5: "windscreen", 7: "all"}
 
-DEFAULT_TARGET_C = 24.0
-MIN_TEMP_C, MAX_TEMP_C = 18.0, 32.0   # °C
-PENDING_SECONDS = 180   # how long a requested state may override the car's report
 
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: GacConfigEntry, add_entities: AddEntitiesCallback
-) -> None:
-    add_entities([GacClimate(entry.runtime_data.coordinator)])
+async def async_setup_entry(hass: HomeAssistant, entry: GacConfigEntry, add_entities: AddEntitiesCallback) -> None:
+    add_configured_entities(entry, add_entities, "climate", [GacClimate(entry.runtime_data.coordinator)])
 
 
 class GacClimate(GacEntity, ClimateEntity):
     _attr_translation_key = "climate"
-    _result_events = ("control_air_condition",)
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT_COOL]
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TURN_ON
-        | ClimateEntityFeature.TURN_OFF
-    )
-    _attr_min_temp = MIN_TEMP_C
-    _attr_max_temp = MAX_TEMP_C
-    _attr_target_temperature_step = 0.5
+    _attr_preset_modes = [PRESET_HEATING, PRESET_COOLING]
+    _attr_target_temperature_step = 1.0
+    # The console can report half degrees; the app's remote control uses whole degrees.
     _attr_precision = PRECISION_HALVES
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: GacCoordinator) -> None:
         super().__init__(coordinator, "climate")
-        self._target: float | None = None    # setpoint asked for from HA
-        self._pending: bool | None = None    # requested on/off until the car confirms
-        self._pending_until: float = 0.0     # ...or until this deadline passes
-        self._op_lock = asyncio.Lock()      # one command at a time per entity
-        self._init_results()
+        # Fan only is the console's Fan: the blower runs without the compressor.
+        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT_COOL, HVACMode.FAN_ONLY]
+        self._cabin = cabin.controller(coordinator)
+        # The car's remote choices; a refreshed capability list reloads the entry.
+        low, high = self._cabin.temperature_range or cabin.DEFAULT_TEMPERATURE_RANGE
+        self._attr_min_temp, self._attr_max_temp = float(low), float(high)
+        # GAC 2.0.32 uses automatic A/C at the maximum/minimum setpoint for these buttons.
+        self._presets = {PRESET_HEATING: float(high), PRESET_COOLING: float(low)}
+        self._attr_fan_modes = ["off", *(str(speed) for speed in self._cabin.fan_speeds)]
+        self._airflow = {AIRFLOW_NAMES[code]: code for code in self._cabin.blowing_modes if code in AIRFLOW_NAMES}
+        self._attr_swing_modes = list(self._airflow)
+        features = (ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_ON
+                    | ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.PRESET_MODE)
+        if self._cabin.fan_speeds:
+            features |= ClimateEntityFeature.FAN_MODE
+        if self._airflow:
+            features |= ClimateEntityFeature.SWING_MODE
+        self._attr_supported_features = features
 
-    @property
-    def _run_minutes(self) -> int:
-        return int(self.coordinator.config_entry.options.get(CONF_AC_MINUTES, DEFAULT_AC_MINUTES))
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(self._cabin.add_listener(self.async_write_ha_state))
 
     @property
     def current_temperature(self) -> float | None:
         return self.status.cabin_temp_c if self.status else None
 
     @property
-    def target_temperature(self) -> float | None:
-        if self._target is not None:
-            return self._target
-        reported = self.status.ac_target_temp_c if self.status else None
-        return reported if reported else DEFAULT_TARGET_C
+    def target_temperature(self) -> float:
+        return self._cabin.target
 
     @property
     def hvac_mode(self) -> HVACMode | None:
-        on = self._pending
-        if on is None:
-            on = self.status.ac_on if self.status else None
+        on = self._cabin.on
         if on is None:
             return None
-        return HVACMode.HEAT_COOL if on else HVACMode.OFF
+        if not on:
+            return HVACMode.OFF
+        return HVACMode.FAN_ONLY if self._cabin.compressor is False else HVACMode.HEAT_COOL
+
+    @property
+    def preset_mode(self) -> str | None:
+        if self._cabin.on is True and self._cabin.compressor is not False:
+            return next((preset for preset, target in self._presets.items() if self._cabin.target == target), None)
+        return None
+
+    @property
+    def fan_mode(self) -> str | None:
+        # Console-only speeds remain in reported_fan_strength and the sensor.
+        mode = self._cabin.fan_mode
+        return mode if mode in self._attr_fan_modes else None
+
+    @property
+    def swing_mode(self) -> str | None:
+        name = AIRFLOW_NAMES.get(self._cabin.blowing_mode)
+        return name if name in self._airflow else None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {"run_minutes": self._run_minutes}
+        status = self.status
+        blowing_mode = getattr(status, "ac_blowing_mode", None)
+        return {"run_minutes": self._cabin.run_minutes,
+                "reported_fan_strength": getattr(status, "ac_fan_strength", None),
+                "reported_auto_mode": getattr(status, "ac_auto_on", None),
+                "reported_compressor": getattr(status, "ac_compressor_on", None),
+                "reported_blowing_mode": blowing_mode,
+                "reported_airflow": AIRFLOW_NAMES.get(blowing_mode) if type(blowing_mode) is int else None,
+                "reported_cycling_mode": getattr(status, "ac_cycling_mode", None)}
 
     def _handle_coordinator_update(self) -> None:
-        # The car's report becomes authoritative once it matches what we asked
-        # for, or once the request has had a fair chance to be reflected.
-        expired = monotonic() > self._pending_until
-        if self._pending is not None:
-            if (self.status is not None and self.status.ac_on == self._pending) or expired:
-                self._pending = None
-        if self._target is not None and self._pending is None:
-            reported = self.status.ac_target_temp_c if self.status else None
-            if reported == self._target or expired:
-                self._target = None
+        self._cabin.sync()
         super()._handle_coordinator_update()
 
-    def _on_command_result(self, result: PushResult) -> None:
-        if self._pending is None:
-            return
-        if result.ok is False:
-            _LOGGER.warning("car did not apply the climate command (result code %s)", result.code)
-            self._pending = None
-            self._target = None
-            self.async_write_ha_state()
+    @staticmethod
+    def _power_for_mode(mode: HVACMode) -> bool:
+        if mode not in (HVACMode.OFF, HVACMode.HEAT_COOL, HVACMode.FAN_ONLY):
+            raise ServiceValidationError(f"Unsupported mode {mode}; choose Off, Heat/Cool or Fan only")
+        return mode != HVACMode.OFF
 
-    async def _command(self, on: bool, target: float | None = None) -> None:
-        """Send A/C on (at ``target`` °C) or off, showing the requested state at once.
-
-        Everything — capturing the previous state, building the request, and
-        restoring on failure or cancellation — happens under the entity's lock,
-        so overlapping calls cannot interleave and a failed request always puts
-        back exactly what it replaced.
-        """
-        async with self._op_lock:
-            prev = (self._pending, self._pending_until, self._target)
-            self._pending, self._pending_until = on, monotonic() + PENDING_SECONDS
-            if target is not None:
-                self._target = target
-            self._begin_command()
-            self.async_write_ha_state()
-            client, vin = self.coordinator.client, self.coordinator.vin
-            resp = None
-            try:
-                if on:
-                    setpoint = self._target if self._target is not None else (self.target_temperature or DEFAULT_TARGET_C)
-                    resp = await self._send(client.climate_on(vin, temperature=setpoint, minutes=self._run_minutes))
-                else:
-                    resp = await self._send(client.climate_off(vin))
-            finally:
-                if resp is None:
-                    self._pending, self._pending_until, self._target = prev
-                    self._end_command(None)
-                    self.async_write_ha_state()
-                else:
-                    self._end_command(command_session_id(resp))
-        await self.coordinator.async_request_refresh()
+    def _compressor_for_mode(self, mode: HVACMode | None) -> bool | None:
+        """The compressor choice a mode asks for, or None when it would not change it."""
+        if mode == HVACMode.FAN_ONLY:
+            return False
+        if mode == HVACMode.HEAT_COOL and self._cabin.compressor is False:
+            return True
+        return None
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Mode selector in the more-info dialog: HEAT_COOL starts the A/C at the setpoint, OFF stops it."""
-        if hvac_mode == HVACMode.OFF:
-            await self._command(False)
-        elif hvac_mode == HVACMode.HEAT_COOL:
-            await self._command(True)
+        if not self._power_for_mode(hvac_mode):
+            await self._cabin.async_set_power(False)
         else:
-            raise ServiceValidationError(f"Unsupported mode {hvac_mode}; the car offers auto (heat_cool) or off")
+            await self._cabin.async_set_fan_only(hvac_mode == HVACMode.FAN_ONLY)
 
     async def async_turn_on(self) -> None:
-        await self._command(True)
+        await self._cabin.async_set_power(True)
 
     async def async_turn_off(self) -> None:
-        await self._command(False)
+        await self._cabin.async_set_power(False)
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        if fan_mode not in self._attr_fan_modes:
+            speeds = self._cabin.fan_speeds
+            raise ServiceValidationError(
+                f"Unsupported remote fan mode; choose Off or a speed from {speeds[0]} to {speeds[-1]}" if speeds
+                else "The car's capability list offers no remote fan speeds"
+            )
+        if fan_mode == "off":
+            await self._cabin.async_set_power(False)
+        else:
+            await self._cabin.async_set_fan_speed(int(fan_mode))
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        if not isinstance(swing_mode, str) or swing_mode not in self._airflow:
+            raise ServiceValidationError(
+                f"Unsupported airflow; choose {', '.join(self._airflow)}" if self._airflow
+                else "The car's capability list offers no remote airflow choice"
+            )
+        await self._cabin.async_set_blowing_mode(self._airflow[swing_mode])
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        if preset_mode not in self._presets:
+            raise ServiceValidationError(f"Unsupported preset {preset_mode}; choose heating or cooling")
+        await self._cabin.async_set_temperature(self._presets[preset_mode], on=True, automatic=True)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
+        mode = kwargs.get(ATTR_HVAC_MODE)
+        on = self._power_for_mode(mode) if mode is not None else None
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
+            if on is not None:
+                await self._cabin.async_set_power(on)
             return
         try:
             value = float(temp)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             raise ServiceValidationError(f"temperature must be a number, got {temp!r}") from None
-        if value != value or not MIN_TEMP_C <= value <= MAX_TEMP_C:
-            raise ServiceValidationError(
-                f"temperature must be between {MIN_TEMP_C:g} and {MAX_TEMP_C:g} °C, got {temp}"
-            )
-        new_target = round(value * 2) / 2
-        if self.hvac_mode == HVACMode.HEAT_COOL:
-            await self._command(True, target=new_target)   # re-send so the car adopts it
-            return
-        async with self._op_lock:
-            self._target = new_target
-            self._pending_until = monotonic() + PENDING_SECONDS
-            self.async_write_ha_state()
+        low, high = self._attr_min_temp, self._attr_max_temp
+        if isinstance(temp, bool) or not math.isfinite(value) or not low <= value <= high:
+            raise ServiceValidationError(f"temperature must be between {low:g} and {high:g} °C")
+        await self._cabin.async_set_temperature(value, on=on, compressor=self._compressor_for_mode(mode))

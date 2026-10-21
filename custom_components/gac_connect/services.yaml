@@ -12,18 +12,9 @@ charge_now:
       description: Charge until the target state of charge instead of a stop time.
       selector: { boolean: {} }
 
-charge_pause:
-  name: Pause charging
-  description: Gate charging off until the next charge-now or window.
-  fields:
-    vin:
-      name: VIN
-      description: Which vehicle (optional if you have only one).
-      selector: { text: {} }
-
 set_charge_window:
   name: Set charge window
-  description: Charge only inside a daily time window.
+  description: Charge only inside a time window, once (no days) or repeating on the chosen days, like the app.
   fields:
     vin:
       name: VIN
@@ -35,16 +26,26 @@ set_charge_window:
       selector: { text: {} }
     stop:
       name: Stop (HH:MM)
-      required: true
+      description: Required unless Until target SoC is on; then no stop time is sent and the car keeps its saved one.
       example: "05:00"
       selector: { text: {} }
     weekly:
       name: Day bitmask
-      description: "Optional. Mon=1, Tue=2, Wed=4 … Sun=64; 0 = every day."
+      description: "Optional. Mon=1, Tue=2, Wed=4 … Sun=64; 127 = every day; 0 or omitted = one time (the app's Once)."
       selector: { number: { min: 0, max: 127, mode: box } }
     until_soc:
       name: Until target SoC
+      description: Stop at the car's target charge level instead of the stop time.
       selector: { boolean: {} }
+
+get_control_capabilities:
+  name: Read cabin control capabilities
+  description: Read the cloud's raw cabin, seat and charging capability fields for troubleshooting. This does not send a vehicle control or change detected equipment.
+  fields:
+    vin:
+      name: VIN
+      description: Which vehicle (optional if you have only one).
+      selector: { text: {} }
 
 send_command:
   name: Send command
@@ -62,3 +63,58 @@ send_command:
       name: Parameters
       description: Optional command overrides as a mapping.
       selector: { object: {} }
+
+get_position:
+  name: Read position report
+  description: Read the car's separate position report, including speed and heading where the car sends them. Latitude, longitude and address values are masked. This sends no vehicle control.
+  fields:
+    vin:
+      name: VIN
+      description: Which vehicle (optional if you have only one).
+      selector: { text: {} }
+
+get_alerts:
+  name: Read car alerts
+  description: Read one page of the car's alert history (charging finished, scheduled charging without a connector, someone left in the car, 12 V battery low, doors or windows left open and others). This sends no vehicle control.
+  fields:
+    vin:
+      name: VIN
+      description: Which vehicle (optional if you have only one).
+      selector: { text: {} }
+    page:
+      name: Page
+      description: Which page of 20 alerts, newest first (default 1).
+      selector: { number: { min: 1, max: 100, mode: box } }
+
+get_departure_plans:
+  name: Read departure plans
+  description: Read the departure plans saved in the GAC app for this car. This sends no vehicle control.
+  fields:
+    vin:
+      name: VIN
+      description: Which vehicle (optional if you have only one).
+      selector: { text: {} }
+
+set_entity_visibility:
+  name: Set entity visibility
+  description: Show an entity automatically (when the car reports the feature), always, or never, like the options page's Always show and Omit lists. The Entity choices sensor lists the entities and the current choices. Changing this reloads the integration.
+  fields:
+    vin:
+      name: VIN
+      description: Which vehicle (optional if you have only one).
+      selector: { text: {} }
+    entity:
+      name: Entity
+      description: The entity's key from the Entity choices sensor, such as binary_sensor:front_left_door.
+      required: true
+      example: binary_sensor:front_left_door
+      selector: { text: {} }
+    visibility:
+      name: Visibility
+      required: true
+      selector:
+        select:
+          options:
+            - automatic
+            - always
+            - omit

@@ -2,7 +2,11 @@
   "domain": "gac_connect",
   "name": "GAC Connect (unofficial, beta)",
   "after_dependencies": [
-    "http"
+    "frontend",
+    "http",
+    "lovelace",
+    "recorder",
+    "websocket_api"
   ],
   "codeowners": [],
   "config_flow": true,
@@ -14,7 +18,7 @@
     "gac_connect"
   ],
   "requirements": [
-    "gac-connect==0.4.0b6"
+    "gac-connect==0.5.0"
   ],
-  "version": "0.4.0b3"
+  "version": "0.5.0"
 }

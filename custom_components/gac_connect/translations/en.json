@@ -7,6 +7,9 @@
         "data": {
           "region": "Region",
           "mobile": "Mobile number"
+        },
+        "data_description": {
+          "mobile": "For Thailand, enter 08… / 09… / 06… or +66…; both formats are accepted."
         }
       },
       "sms": {
@@ -22,17 +25,48 @@
           "vin": "Vehicle"
         }
       },
+      "remote_controls": {
+        "title": "Remote controls",
+        "description": "Choose which remote controls Home Assistant may use for {model}. Sensors and controls are matched to the car's own capability list. Each can be changed later in the integration options.",
+        "data": {
+          "experimental_pinless_unlock": "Allow remote unlocking",
+          "allow_charger_unlock": "Allow remote charging connector unlock",
+          "allow_vehicle_shutdown": "Allow remote vehicle shutdown"
+        },
+        "data_description": {
+          "experimental_pinless_unlock": "Allow the Doors control to unlock the car. No PIN required. Leave off to use this control for locking only.",
+          "allow_charger_unlock": "Show the Unlock charging connector button. Unlocking lets anyone pull the charging cable out, and unlocking while charging affects the charging power. There is no remote command to lock it again. Off by default.",
+          "allow_vehicle_shutdown": "Show the Turn vehicle off button and allow shutdown commands. Off by default. Enabling this setting does not send a command."
+        }
+      },
       "reauth_confirm": {
         "title": "Sign in again",
-        "description": "Your session has expired. Sign in again to reconnect."
+        "description": "Sign in to GAC again to renew the session. Your entities and settings stay as they are. Signing in here may sign the GAC app out on your phone."
+      },
+      "cards": {
+        "title": "Dashboard cards",
+        "description": "GAC Connect comes with six dashboard cards for {model}. They are installed only if you choose them; until then GAC Connect adds nothing to Home Assistant's pages. Once installed, they can be added to any dashboard, and GAC Connect also creates a dashboard for the car with the cards picked below (pick none to skip it). Both can be changed later under Configure → Dashboard cards.",
+        "data": {
+          "load_cards": "Install dashboard cards?",
+          "dashboard_cards": "Cards on the dashboard"
+        },
+        "data_description": {
+          "load_cards": "Off by default.",
+          "dashboard_cards": "Used only when the cards are installed."
+        }
+      },
+      "finish": {
+        "title": "Finish setup",
+        "description": "Refresh your browser after setup so the cards load."
       }
     },
     "progress": {
       "captcha": "Solve the slide puzzle in the window that opened, then return here."
     },
     "error": {
+      "invalid_thai_mobile": "Enter a Thai mobile number such as 0812345678 or +66812345678.",
       "cannot_connect": "Could not reach GAC. Check your connection and try again.",
-      "invalid_code": "That code was not accepted. Request a new one and try again.",
+      "invalid_code": "That code was not accepted. Check it and enter it again. If it has expired, close this and start again for a new code.",
       "rate_limited": "Too many requests to GAC just now. Wait a minute and try again."
     },
     "abort": {
@@ -47,25 +81,118 @@
   },
   "options": {
     "step": {
-      "init": {
+      "settings": {
         "title": "GAC Connect options",
+        "description": "Sensors and controls are matched to the car's capability list and its reports. Use Always show and Omit to override them.",
         "data": {
+          "allow_plaintext_push": "Allow unencrypted push connections (less secure)",
           "scan_interval": "Poll interval (seconds)",
-          "enable_tracker": "Enable location tracking",
-          "enable_fridge": "Fridge / warmer box controls",
-          "picture": "Car picture on the map (optional)",
+          "track_parked": "Enable location tracking when parked",
+          "track_moving": "Enable location tracking when moving",
+          "experimental_pinless_unlock": "Allow remote unlocking",
+          "allow_charger_unlock": "Allow remote charging connector unlock",
+          "allow_account_alerts": "Allow GAC account alerts",
+          "allow_vehicle_shutdown": "Allow remote vehicle shutdown",
+          "enable_entities": "Always show",
+          "omit_entities": "Omit unsupported entities",
           "quiet_start": "Quiet hours start (HH:MM, optional)",
-          "quiet_end": "Quiet hours end (HH:MM, optional)",
-          "ac_minutes": "A/C run time (minutes)"
+          "quiet_end": "Quiet hours end (HH:MM, optional)"
         },
         "data_description": {
-          "enable_fridge": "Shown when the car reports a fridge. Turn off to remove them, for example on a trim without one.",
-          "picture": "An image URL, or a /local/ path such as /local/my-car.png for a file in your config/www folder. Leave empty for the built-in AION V picture; other models show the entity's initials."
+          "allow_plaintext_push": "Off by default. If GAC offers only a plaintext broker, enabling this sends the broker credentials and topic names without TLS, which allows network interception or forged results. On GAC's Southeast Asia service they include an account number, but not the VIN or phone number. Polling continues when disabled.",
+          "experimental_pinless_unlock": "Allow the Doors control to unlock the car. No PIN required. Leave off to use this control for locking only.",
+          "allow_charger_unlock": "Show the Unlock charging connector button. Unlocking lets anyone pull the charging cable out, and unlocking while charging affects the charging power. There is no remote command to lock it again. Off by default.",
+          "allow_account_alerts": "Read GAC's alert list every 10 minutes (charging connector not plugged in, charging failed, someone left in the car, 12 V battery low, anti-theft and others) and fire a GAC alert event for each new one. GAC allows one account sign-in: this uses Home Assistant's, so it stops when the GAC app signs in on your phone (the Last GAC alert sensor then shows Signed out), and signing Home Assistant in again (Reconfigure) signs the app out. Off by default.",
+          "allow_vehicle_shutdown": "Show the Turn vehicle off button and allow shutdown commands. Off by default. Enabling this setting does not send a command; the Vehicle power sensor remains available when it is off.",
+          "enable_entities": "Show these entities even if the car does not appear to have them. Omit and the fridge and location settings still take priority; remote unlocking, connector unlock and shutdown need their Allow settings.",
+          "omit_entities": "Hide these entities even if the car has them. Existing entities are disabled while selected and return with the same IDs if you clear them.",
+          "track_parked": "Show the car's location while it is switched off. With either location setting on, the Home/Away location tracker and a GPS coordinates sensor are added; with both off, neither is shown. Coordinates remain redacted in downloaded diagnostics.",
+          "track_moving": "Show the car's location while it is switched on. The car reports no speed or gear, so switched on counts as moving, even when stationary. While the car is in a state you do not track, both location entities show unknown and no position is recorded."
+        }
+      },
+      "init": {
+        "title": "GAC Connect",
+        "menu_options": {
+          "settings": "Vehicle settings",
+          "cards": "Dashboard cards",
+          "equipment": "Detected equipment",
+          "capabilities": "Refresh vehicle capabilities",
+          "charging": "Charging schedule"
+        },
+        "description": "Vehicle settings are saved when you submit them. You can open another panel here, or close this dialog when finished."
+      },
+      "equipment": {
+        "title": "Detected equipment",
+        "description": "Which entities are shown, and why.\n\n{equipment}"
+      },
+      "capabilities": {
+        "title": "Refresh vehicle capabilities",
+        "description": "Read the list of features your car offers remotely from GAC's service, and show or hide entities to match. Do this after a software update or if entities look wrong. Your Omit and Always show choices still apply. One request; no command is sent to the car."
+      },
+      "charging": {
+        "title": "Charging schedule",
+        "description": "{schedule}\n\nSubmitting a charging action returns here after the request is accepted, not after the car confirms it. Check Last command for the outcome.",
+        "menu_options": {
+          "charge_window": "Set a charging window",
+          "charge_now": "Charge whenever plugged in",
+          "init": "Back",
+          "refresh_charging": "Refresh vehicle report"
+        }
+      },
+      "charge_now": {
+        "title": "Charge whenever plugged in",
+        "description": "Submitting allows the car to charge whenever it is plugged in, overriding scheduled mode. This sends a command to the car. It does not guarantee charging starts immediately. Check Last command and the vehicle’s next report for the outcome."
+      },
+      "charge_window": {
+        "title": "Send a charging window",
+        "description": "The current values reported by the car are prefilled. Choose times in {timezone} and select the days, then submit to update the schedule. Check Last command for the outcome.",
+        "data": {
+          "start": "Start (HH:MM)",
+          "stop": "Stop (HH:MM)",
+          "days": "Days the window starts",
+          "until_soc": "Stop at the car’s target charge level"
+        },
+        "data_description": {
+          "start": "Use 24-hour time, for example 23:00.",
+          "stop": "Use 24-hour time, for example 05:00. An earlier stop time runs into the following day. Start and stop must differ. Not needed when stopping at the target charge level.",
+          "days": "Leave empty for a one-time charge (the app’s Once). Select days to repeat, or all seven for every day. For an overnight window, select the day charging starts.",
+          "until_soc": "Use the car’s existing target instead of the stop time. This integration cannot read or change that target; verify it in the car or official app."
+        }
+      },
+      "cards": {
+        "title": "Dashboard cards",
+        "description": "{status}\n\nInstalled, the cards can be added to any dashboard; not installed, GAC Connect adds nothing to Home Assistant's pages. With the cards installed, choose the cards on this car's dashboard. Pick none to remove it; an edited dashboard is kept. Refresh your browser after a change.",
+        "data": {
+          "load_cards": "Install dashboard cards?",
+          "dashboard_cards": "Cards on the dashboard"
+        },
+        "data_description": {
+          "dashboard_cards": "Used only when the cards are installed."
+        }
+      },
+      "confirm_remove_dashboard": {
+        "title": "Remove the dashboard",
+        "description": "Remove this car's dashboard? {after}",
+        "data": {
+          "confirm": "Remove the dashboard"
         }
       }
     },
     "error": {
-      "invalid_picture": "Enter an image URL (https://…) or a path that starts with /, for example /local/my-car.png."
+      "conflicting_entity_choices": "An entity cannot be in both Always show and Omit. Remove it from one list.",
+      "invalid_quiet_time": "Enter a time from 00:00 to 23:59 in HH:MM format.",
+      "quiet_pair_required": "Set both quiet-hour times, or clear both to disable quiet hours.",
+      "quiet_times_equal": "Start and end must differ. Clear both to disable quiet hours.",
+      "charge_window_closing": "This window ends before the car could start it: a start that has already passed is sent from the next minute. Choose a later stop time.",
+      "invalid_charge_window": "Enter a start time and, unless stopping at the target charge level, a different stop time, in HH:MM format (00:00–23:59), and choose valid days.",
+      "command_failed": "The request failed. Open Last command for the failure reason and service code, and check Polling status before trying again.",
+      "command_refused": "{reason}",
+      "capability_read_failed": "The capability list could not be read. Equipment is still detected from the car's reports; try again later.",
+      "dashboard_edited": "This car's dashboard has been edited, so GAC Connect will not change or remove it. Change it on the dashboard itself, or delete it there.",
+      "confirmation_required": "Tick Remove the dashboard to confirm, or close this dialog to keep it."
+    },
+    "abort": {
+      "vehicle_not_loaded": "The vehicle integration is not loaded. Reconnect it before viewing or changing charging settings."
     }
   },
   "entity": {
@@ -84,6 +211,60 @@
       },
       "aux_voltage": {
         "name": "12V battery"
+      },
+      "battery_temp": {
+        "name": "Battery temperature"
+      },
+      "trip_consumption": {
+        "name": "Trip consumption"
+      },
+      "last_gac_alert": {
+        "name": "Last GAC alert",
+        "state": {
+          "anti_theft": "Anti-theft alarm: possible intrusion",
+          "battery_self_check_done": "Battery self-check completed",
+          "battery_temp_cancelled": "Smart battery temp cancelled",
+          "battery_temp_finished": "Smart battery temp finished",
+          "battery_temp_not_started": "Smart battery temp: conditions not met",
+          "battery_temp_running": "Smart battery temp running",
+          "battery_temp_stopped": "Smart battery temp stopped: battery low or a thermal fault",
+          "bonnet_open": "Bonnet open",
+          "boot_open": "Boot open",
+          "charger_fault": "Charger fault; charging failed",
+          "charging_failed": "Charging failed",
+          "charging_finished": "Charging finished",
+          "connector_not_plugged_in": "Charging time reached, but the connector is not plugged in",
+          "door_unlocked": "Doors not locked",
+          "fridge_door_open": "Fridge door open",
+          "fridge_low_battery": "Fridge cannot start: battery low",
+          "fridge_scheduled_start": "Fridge started on schedule",
+          "fridge_scheduled_start_failed": "Fridge scheduled start failed",
+          "fridge_start_failed": "Fridge could not start: battery low",
+          "fridge_switched_off": "Fridge finished and switched off",
+          "fridge_switched_off_low_battery": "Fridge switched off: battery low",
+          "full_charge_reminder": "Charge fully now and then so the battery can calibrate",
+          "hazard_lights_on": "Hazard lights left on",
+          "high_12v_voltage": "12 V battery voltage too high",
+          "living_being_ac_on": "Living being detected; A/C switched on",
+          "living_being_left": "Living being may be left in the car",
+          "low_12v_battery": "12 V battery low",
+          "other": "Other alert",
+          "power_hold_ended": "Power Hold ended: battery low, the car switched off",
+          "power_hold_on": "Power Hold on",
+          "sterilisation_finished": "Sterilisation finished",
+          "sterilisation_interrupted": "Sterilisation interrupted",
+          "sunroof_open": "Sunroof open",
+          "thermal_fault": "Thermal system fault",
+          "tyre_pressure_low": "Tyre pressure low",
+          "tyre_sensor_fault": "Tyre pressure sensor fault",
+          "ventilation_windows_closed": "Ventilation mode closed the windows (rain)",
+          "ventilation_windows_not_closed": "Ventilation mode could not close the windows (rain)",
+          "window_open": "Window open",
+          "no_alerts": "No alerts",
+          "not_read_yet": "Not read yet",
+          "read_failed": "Read failed",
+          "signed_out": "Signed out"
+        }
       },
       "charge_time": {
         "name": "Estimated charge time"
@@ -142,9 +323,72 @@
       },
       "fridge_time_left": {
         "name": "Fridge time left"
+      },
+      "data_freshness": {
+        "name": "Data freshness",
+        "state": {
+          "recent": "Recent report",
+          "stale": "Old report",
+          "not_reported": "Report time unknown",
+          "clock_mismatch": "Report clock ahead"
+        }
+      },
+      "last_refresh": {
+        "name": "Last cloud refresh"
+      },
+      "polling_status": {
+        "name": "Polling status",
+        "state": {
+          "waiting": "Waiting for first refresh",
+          "ok": "Polling normally",
+          "quiet_hours": "Quiet hours",
+          "rate_limited": "Waiting for request limit",
+          "error": "Refresh failed",
+          "auth_required": "Sign in again"
+        }
+      },
+      "last_command": {
+        "name": "Last command",
+        "state": {
+          "idle": "No command this session",
+          "sending": "Sending request",
+          "pending": "Waiting for vehicle",
+          "awaiting_report": "Success reported; waiting for state",
+          "confirmed": "Requested state reported",
+          "reported_success": "Vehicle reported success",
+          "rejected": "Vehicle rejected request",
+          "failed": "Request failed",
+          "timed_out": "Not confirmed in time",
+          "cancelled": "Request cancelled",
+          "superseded": "Replaced by a newer request"
+        }
+      },
+      "charge_schedule": {
+        "name": "Charging schedule",
+        "state": {
+          "unrestricted": "Whenever plugged in",
+          "scheduled": "Scheduled charging",
+          "not_set": "Not set, won't charge",
+          "not_reported": "Mode not reported"
+        }
+      },
+      "gps_coordinates": {
+        "name": "GPS coordinates"
+      },
+      "outside_temp": {
+        "name": "Outside temperature"
+      },
+      "ac_fan_strength": {
+        "name": "Cabin fan strength"
+      },
+      "entity_choices": {
+        "name": "Entity choices"
       }
     },
     "binary_sensor": {
+      "vehicle_power": {
+        "name": "Vehicle power"
+      },
       "plugged": {
         "name": "Plugged in"
       },
@@ -160,31 +404,123 @@
       "window_open": {
         "name": "Window"
       },
+      "front_left_door": {
+        "name": "Front left door"
+      },
+      "front_right_door": {
+        "name": "Front right door"
+      },
+      "rear_left_door": {
+        "name": "Rear left door"
+      },
+      "rear_right_door": {
+        "name": "Rear right door"
+      },
+      "front_left_window": {
+        "name": "Front left window"
+      },
+      "front_right_window": {
+        "name": "Front right window"
+      },
+      "rear_left_window": {
+        "name": "Rear left window"
+      },
+      "rear_right_window": {
+        "name": "Rear right window"
+      },
       "hatch_open": {
         "name": "Boot"
+      },
+      "hood_open": {
+        "name": "Hood"
+      },
+      "headlights": {
+        "name": "Headlights",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "high_beam": {
+        "name": "High beams",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "rear_fog_light": {
+        "name": "Rear fog light",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "brake_lights": {
+        "name": "Brake lights",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "turn_signal": {
+        "name": "Turn indicators",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "brake_fluid": {
+        "name": "Brake fluid"
       },
       "online": {
         "name": "Online"
       },
       "charger_locked": {
         "name": "Charger lock"
+      },
+      "ac_auto": {
+        "name": "A/C auto mode"
+      },
+      "ac_compressor": {
+        "name": "A/C compressor"
+      },
+      "anti_theft": {
+        "name": "Anti-theft enabled"
+      },
+      "seat_1_ventilation": {
+        "name": "Driver seat ventilation state"
+      },
+      "seat_2_ventilation": {
+        "name": "Front passenger seat ventilation state"
+      },
+      "seat_3_ventilation": {
+        "name": "Rear left seat ventilation state"
+      },
+      "seat_4_ventilation": {
+        "name": "Rear right seat ventilation state"
       }
     },
     "button": {
+      "vehicle_power_off": {
+        "name": "Turn vehicle off"
+      },
       "charge_now": {
         "name": "Charge now"
       },
-      "charge_pause": {
-        "name": "Pause charging"
+      "charger_unlock": {
+        "name": "Unlock charging connector"
       },
       "refresh": {
         "name": "Refresh"
       },
-      "precondition_battery": {
-        "name": "Precondition battery"
-      },
       "horn": {
         "name": "Sound horn"
+      },
+      "send_charge_window": {
+        "name": "Send charge window"
+      },
+      "refresh_capabilities": {
+        "name": "Refresh vehicle capabilities"
       }
     },
     "switch": {
@@ -198,13 +534,70 @@
         "name": "Ventilation"
       },
       "climate_power": {
-        "name": "Pre-conditioning"
+        "name": "A/C"
       },
       "lights": {
         "name": "Flash lights"
       },
       "fridge": {
         "name": "Fridge"
+      },
+      "precondition_battery": {
+        "name": "Smart battery temp"
+      },
+      "sterilisation": {
+        "name": "Sterilisation"
+      },
+      "recirculation": {
+        "name": "Recirculation"
+      },
+      "allow_plaintext_push": {
+        "name": "Allow unencrypted push connections"
+      },
+      "track_parked": {
+        "name": "Location tracking when parked"
+      },
+      "track_moving": {
+        "name": "Location tracking when moving"
+      },
+      "allow_remote_unlock": {
+        "name": "Allow remote unlocking"
+      },
+      "allow_charger_unlock": {
+        "name": "Allow remote charging connector unlock"
+      },
+      "allow_account_alerts": {
+        "name": "Allow GAC account alerts"
+      },
+      "allow_vehicle_shutdown": {
+        "name": "Allow remote vehicle shutdown"
+      },
+      "quiet_hours": {
+        "name": "Quiet hours"
+      },
+      "charge_window_mon": {
+        "name": "Charge on Monday"
+      },
+      "charge_window_tue": {
+        "name": "Charge on Tuesday"
+      },
+      "charge_window_wed": {
+        "name": "Charge on Wednesday"
+      },
+      "charge_window_thu": {
+        "name": "Charge on Thursday"
+      },
+      "charge_window_fri": {
+        "name": "Charge on Friday"
+      },
+      "charge_window_sat": {
+        "name": "Charge on Saturday"
+      },
+      "charge_window_sun": {
+        "name": "Charge on Sunday"
+      },
+      "charge_window_until_soc": {
+        "name": "Stop at charge limit"
       }
     },
     "device_tracker": {
@@ -214,7 +607,30 @@
     },
     "climate": {
       "climate": {
-        "name": "Climate"
+        "name": "Climate",
+        "state": {
+          "heat_cool": "On",
+          "off": "Off"
+        },
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heating": "Heating",
+              "cooling": "Cooling"
+            }
+          },
+          "swing_mode": {
+            "name": "Airflow outlets",
+            "state": {
+              "cabin": "Cabin",
+              "cabin_feet": "Cabin + Feet",
+              "feet": "Feet",
+              "feet_windscreen": "Feet + Windscreen",
+              "windscreen": "Windscreen",
+              "all": "Cabin + Feet + Windscreen"
+            }
+          }
+        }
       }
     },
     "lock": {
@@ -230,7 +646,7 @@
         "name": "Sunroof"
       },
       "tailgate": {
-        "name": "Tailgate"
+        "name": "Boot"
       }
     },
     "select": {
@@ -242,11 +658,190 @@
           "heat": "Heat",
           "freeze": "Freeze"
         }
+      },
+      "seat_1_ventilation": {
+        "name": "Driver seat ventilation",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "seat_2_ventilation": {
+        "name": "Front passenger seat ventilation",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
       }
     },
     "number": {
+      "ac_minutes": {
+        "name": "Pre-conditioning run time"
+      },
       "fridge_temperature": {
         "name": "Fridge temperature"
+      },
+      "polling_interval": {
+        "name": "Poll interval"
+      }
+    },
+    "event": {
+      "car_alert": {
+        "name": "Car alert",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "charging_stopped": "Charging stopped",
+              "left_unlocked": "Left unlocked",
+              "left_open": "Door, boot or bonnet left open",
+              "window_left_open": "Window left open",
+              "sterilisation_finished": "Sterilisation finished",
+              "battery_temp_finished": "Smart battery temp finished"
+            }
+          }
+        }
+      },
+      "gac_alert": {
+        "name": "GAC alert",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "anti_theft": "Anti-theft alarm: possible intrusion",
+              "battery_self_check_done": "Battery self-check completed",
+              "battery_temp_cancelled": "Smart battery temp cancelled",
+              "battery_temp_finished": "Smart battery temp finished",
+              "battery_temp_not_started": "Smart battery temp: conditions not met",
+              "battery_temp_running": "Smart battery temp running",
+              "battery_temp_stopped": "Smart battery temp stopped: battery low or a thermal fault",
+              "bonnet_open": "Bonnet open",
+              "boot_open": "Boot open",
+              "charger_fault": "Charger fault; charging failed",
+              "charging_failed": "Charging failed",
+              "charging_finished": "Charging finished",
+              "connector_not_plugged_in": "Charging time reached, but the connector is not plugged in",
+              "door_unlocked": "Doors not locked",
+              "fridge_door_open": "Fridge door open",
+              "fridge_low_battery": "Fridge cannot start: battery low",
+              "fridge_scheduled_start": "Fridge started on schedule",
+              "fridge_scheduled_start_failed": "Fridge scheduled start failed",
+              "fridge_start_failed": "Fridge could not start: battery low",
+              "fridge_switched_off": "Fridge finished and switched off",
+              "fridge_switched_off_low_battery": "Fridge switched off: battery low",
+              "full_charge_reminder": "Charge fully now and then so the battery can calibrate",
+              "hazard_lights_on": "Hazard lights left on",
+              "high_12v_voltage": "12 V battery voltage too high",
+              "living_being_ac_on": "Living being detected; A/C switched on",
+              "living_being_left": "Living being may be left in the car",
+              "low_12v_battery": "12 V battery low",
+              "other": "Other alert",
+              "power_hold_ended": "Power Hold ended: battery low, the car switched off",
+              "power_hold_on": "Power Hold on",
+              "sterilisation_finished": "Sterilisation finished",
+              "sterilisation_interrupted": "Sterilisation interrupted",
+              "sunroof_open": "Sunroof open",
+              "thermal_fault": "Thermal system fault",
+              "tyre_pressure_low": "Tyre pressure low",
+              "tyre_sensor_fault": "Tyre pressure sensor fault",
+              "ventilation_windows_closed": "Ventilation mode closed the windows (rain)",
+              "ventilation_windows_not_closed": "Ventilation mode could not close the windows (rain)",
+              "window_open": "Window open"
+            }
+          }
+        }
+      }
+    },
+    "time": {
+      "quiet_hours_start": {
+        "name": "Quiet hours start"
+      },
+      "quiet_hours_end": {
+        "name": "Quiet hours end"
+      },
+      "charge_window_start": {
+        "name": "Charge window start"
+      },
+      "charge_window_stop": {
+        "name": "Charge window stop"
+      }
+    }
+  },
+  "services": {
+    "get_control_capabilities": {
+      "name": "Read cabin control capabilities",
+      "description": "Read the cloud’s raw cabin and seat capability fields for troubleshooting. This does not send a vehicle control or change detected equipment.",
+      "fields": {
+        "vin": {
+          "name": "VIN",
+          "description": "Which vehicle (optional if you have only one)."
+        }
+      }
+    },
+    "get_position": {
+      "name": "Read position report",
+      "description": "Read the car’s separate position report, including speed and heading where the car sends them. Latitude, longitude and address values are masked. This sends no vehicle control.",
+      "fields": {
+        "vin": {
+          "name": "VIN",
+          "description": "Which vehicle (optional if you have only one)."
+        }
+      }
+    },
+    "get_alerts": {
+      "name": "Read car alerts",
+      "description": "Read one page of the car’s alert history (charging finished, scheduled charging without a connector, someone left in the car, 12 V battery low, doors or windows left open and others). This sends no vehicle control.",
+      "fields": {
+        "vin": {
+          "name": "VIN",
+          "description": "Which vehicle (optional if you have only one)."
+        },
+        "page": {
+          "name": "Page",
+          "description": "Which page of 20 alerts, newest first (default 1)."
+        }
+      }
+    },
+    "get_departure_plans": {
+      "name": "Read departure plans",
+      "description": "Read the departure plans saved in the GAC app for this car. This sends no vehicle control.",
+      "fields": {
+        "vin": {
+          "name": "VIN",
+          "description": "Which vehicle (optional if you have only one)."
+        }
+      }
+    },
+    "set_entity_visibility": {
+      "name": "Set entity visibility",
+      "description": "Show an entity automatically (when the car reports the feature), always, or never, like the options page's Always show and Omit lists. The Entity choices sensor lists the entities and the current choices. Changing this reloads the integration.",
+      "fields": {
+        "vin": {
+          "name": "VIN",
+          "description": "Which vehicle (optional if you have only one)."
+        },
+        "entity": {
+          "name": "Entity",
+          "description": "The entity's key from the Entity choices sensor, such as binary_sensor:front_left_door."
+        },
+        "visibility": {
+          "name": "Visibility",
+          "description": "automatic, always or omit."
+        }
+      }
+    }
+  },
+  "selector": {
+    "dashboard_cards": {
+      "options": {
+        "vehicle": "Vehicle",
+        "charging": "Charging",
+        "climate": "Climate",
+        "location": "Location",
+        "activity": "Activity",
+        "settings": "Settings"
       }
     }
   }

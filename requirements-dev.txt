@@ -1,0 +1,5 @@
+# Home Assistant 2026.10 requires Python 3.14.
+homeassistant==2026.10.2
+gac-connect==0.5.0
+pytest>=9,<10
+ruff>=0.16,<0.17

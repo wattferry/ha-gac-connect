@@ -1,0 +1,436 @@
+{
+ "capabilities": [
+  {
+   "capability": {
+    "remoteCapability": {
+     "engineCapabilities": [
+      {
+       "minDuration": 20000,
+       "modelStartCapability": 0,
+       "minEngineCurrentDuration": 60,
+       "alarmsCapability": 1,
+       "startCapability": 3,
+       "enableCapability": 0,
+       "engine": 0,
+       "durationCapability": 3,
+       "currentDurationCapability": 3,
+       "maxEngineCurrentDuration": 3600,
+       "controlCapability": 0,
+       "maxDuration": 60000
+      },
+      {
+       "minDuration": 20000,
+       "modelStartCapability": 0,
+       "minEngineCurrentDuration": 60,
+       "alarmsCapability": 1,
+       "startCapability": 3,
+       "enableCapability": 0,
+       "engine": 2,
+       "durationCapability": 3,
+       "currentDurationCapability": 3,
+       "maxEngineCurrentDuration": 3600,
+       "controlCapability": 0,
+       "maxDuration": 60000
+      }
+     ],
+     "uploadPictureCapabilities": [
+      {
+       "controlCapability": 0
+      }
+     ],
+     "locatorCapabilities": [
+      {
+       "minDuration": 20000,
+       "enableCapability": 3,
+       "durationCapability": 0,
+       "controlCapability": 1,
+       "maxDuration": 60000
+      }
+     ],
+     "doorCapabilities": [
+      {
+       "door": 0,
+       "openModeCapability": 3,
+       "openPercentageCapability": 0,
+       "lockCapability": 3,
+       "controlCapability": 1,
+       "supportOpenModes": [
+        0,
+        1
+       ],
+       "lockAlarmsCapability": 1,
+       "doorAlarmsCapability": 1
+      }
+     ],
+     "hatchCapabilities": [
+      {
+       "openModeCapability": 0,
+       "openPercentageCapability": 0,
+       "lockCapability": 0,
+       "hatchAlarmsCapability": 1,
+       "hatch": 1,
+       "controlCapability": 0,
+       "supportOpenModes": [],
+       "lockAlarmsCapability": 0
+      },
+      {
+       "openModeCapability": 3,
+       "openPercentageCapability": 0,
+       "lockCapability": 3,
+       "hatchAlarmsCapability": 1,
+       "hatch": 3,
+       "controlCapability": 1,
+       "supportOpenModes": [
+        0,
+        1
+       ],
+       "lockAlarmsCapability": 1
+      }
+     ],
+     "batteryPretreatmentCapabilities": [
+      {
+       "batteryPretreatmentModeCapability": 3,
+       "supportBatteryPretreatmentModes": [
+        0,
+        1,
+        2,
+        3
+       ],
+       "dailyReservationTimeSettingCapability": 3,
+       "batteryPretreatmentStatusCapability": 1,
+       "alarmsCapability": 1,
+       "controlCapability": 1,
+       "weeklyReservationCapability": 3
+      }
+     ],
+     "chargingCapabilities": [
+      {
+       "chargingStatusCapability": 1,
+       "alarmsCapability": 1,
+       "chargingModeCapability": 3,
+       "supportChargingModes": [
+        0,
+        1,
+        2,
+        3
+       ],
+       "chargingVoltageCapability": 1,
+       "dailyReservationTimeSettingCapability": 3,
+       "chargingCurrentCapability": 1,
+       "controlCapability": 1,
+       "estimatedChargedDurationCapability": 1,
+       "weeklyReservationCapability": 3
+      }
+     ],
+     "hornCapabilities": [
+      {
+       "durationCapability": 3,
+       "hootCapability": 3,
+       "controlCapability": 1
+      }
+     ],
+     "powerCapabilities": [
+      {
+       "powerCapability": 3,
+       "currentDurationCapability": 2,
+       "controlCapability": 1,
+       "supportPowerModes": [
+        0,
+        2
+       ]
+      }
+     ],
+     "windowCapabilities": [
+      {
+       "openModeCapability": 3,
+       "openPercentageCapability": 0,
+       "ventilateModeCapability": 3,
+       "alarmsCapability": 1,
+       "controlCapability": 1,
+       "window": 0,
+       "supportOpenModes": [
+        0,
+        1
+       ],
+       "doorModuleCapability": 1
+      }
+     ],
+     "batteryCapabilities": [
+      {
+       "voltageCapability": 1,
+       "supportTemperatureUnits": [
+        0
+       ],
+       "alarmsCapability": 1,
+       "remainElectricityPercentageCapability": 1,
+       "controlCapability": 1,
+       "temperatureCapability": 1,
+       "battery": 0
+      }
+     ],
+     "brakeCapabilities": [
+      {
+       "alarmsCapability": 1,
+       "controlCapability": 1
+      }
+     ],
+     "antiTheftCapabilities": [
+      {
+       "enableCapability": 1,
+       "alarmsCapability": 1,
+       "controlCapability": 1
+      }
+     ],
+     "seatTemperatureCapabilities": [
+      {
+       "maxTemperature": 35,
+       "temperatureStrengthCapability": 0,
+       "maxTemperatureCurrentDuration": 3600,
+       "supportTemperatureUnits": [
+        0
+       ],
+       "minTemperatureStrength": 0,
+       "alarmsCapability": 1,
+       "seat": 1,
+       "windStrengthCapability": 3,
+       "temperatureModeCapability": 0,
+       "minTemperature": 15,
+       "supportTemperatureModes": [
+        2
+       ],
+       "minTemperatureCurrentDuration": 60,
+       "enableWindCapability": 3,
+       "temperatureDurationCapability": 3,
+       "controlCapability": 1,
+       "temperatureCapability": 0,
+       "maxWindStrength": 3,
+       "minWindStrength": 0,
+       "maxTemperatureStrength": 3
+      },
+      {
+       "maxTemperature": 35,
+       "temperatureStrengthCapability": 0,
+       "maxTemperatureCurrentDuration": 3600,
+       "supportTemperatureUnits": [
+        0
+       ],
+       "minTemperatureStrength": 0,
+       "alarmsCapability": 1,
+       "seat": 2,
+       "windStrengthCapability": 3,
+       "temperatureModeCapability": 0,
+       "minTemperature": 15,
+       "supportTemperatureModes": [
+        2
+       ],
+       "minTemperatureCurrentDuration": 60,
+       "enableWindCapability": 3,
+       "temperatureDurationCapability": 3,
+       "controlCapability": 1,
+       "temperatureCapability": 0,
+       "maxWindStrength": 3,
+       "minWindStrength": 0,
+       "maxTemperatureStrength": 3
+      },
+      {
+       "temperatureStrengthCapability": 0,
+       "supportTemperatureUnits": [],
+       "alarmsCapability": 1,
+       "seat": 3,
+       "windStrengthCapability": 0,
+       "temperatureModeCapability": 0,
+       "supportTemperatureModes": [],
+       "enableWindCapability": 0,
+       "temperatureDurationCapability": 0,
+       "controlCapability": 0,
+       "temperatureCapability": 0
+      },
+      {
+       "temperatureStrengthCapability": 0,
+       "supportTemperatureUnits": [],
+       "alarmsCapability": 1,
+       "seat": 4,
+       "windStrengthCapability": 0,
+       "temperatureModeCapability": 0,
+       "supportTemperatureModes": [],
+       "enableWindCapability": 0,
+       "temperatureDurationCapability": 0,
+       "controlCapability": 0,
+       "temperatureCapability": 0
+      }
+     ],
+     "sensitiveDataCapabilities": [
+      {
+       "controlCapability": 1
+      }
+     ],
+     "environmentCapabilities": [
+      {
+       "temperatureInsideCarCapability": 1,
+       "pm25Capability": 0,
+       "temperatureOutsideCarCapability": 1,
+       "supportTemperatureUnits": [
+        0
+       ],
+       "controlCapability": 1
+      }
+     ],
+     "refrigeratorCapabilities": [
+      {
+       "maxRefrigerationTemperature": 20,
+       "maxHeatingTemperature": 50,
+       "minFreezingTemperature": -15,
+       "workingMode": [
+        1,
+        2,
+        3,
+        4
+       ],
+       "alarmsCapability": 1,
+       "maxFreezingTemperature": -1,
+       "controlCapability": 0,
+       "refrigeratorCapability": 3,
+       "minHeatingTemperature": 35,
+       "minRefrigerationTemperature": 0
+      }
+     ],
+     "chargerCapability": [
+      {
+       "lockCapability": 3,
+       "alarmsCapability": 1,
+       "plugCapability": 1,
+       "controlCapability": 1
+      }
+     ],
+     "positionCapabilities": [
+      {
+       "velocityCapability": 1,
+       "dateTimeCapability": 1,
+       "headingDegreeCapability": 1,
+       "latitudeCapability": 1,
+       "controlCapability": 1,
+       "longitudeCapability": 1,
+       "supportPositionModes": [
+        0
+       ]
+      }
+     ],
+     "lightCapabilities": [
+      {
+       "directionCapability": 0,
+       "light": 1,
+       "openCapability": 3,
+       "durationCapability": 3,
+       "alarmsCapability": 1,
+       "controlCapability": 1,
+       "supportDirections": [
+        0
+       ]
+      }
+     ],
+     "drivingOverviewCapabilities": [
+      {
+       "averageElectricityConsumptionCapability": 1,
+       "supportElectricityConsumptionUnits": [
+        0
+       ],
+       "alarmsCapability": 1,
+       "supportFuelConsumptionUnits": [
+        0
+       ],
+       "supportLengthUnits": [
+        0
+       ],
+       "averageFuelConsumptionCapability": 1,
+       "remainFuelPercentageCapability": 1,
+       "remainVoyageCourseCapability": 1,
+       "remainElectricityPercentageCapability": 1,
+       "controlCapability": 1,
+       "totalVoyageCourseCapability": 1
+      }
+     ],
+     "eCallCapabilities": [
+      {
+       "controlCapability": 1
+      }
+     ],
+     "systemCapabilities": [
+      {
+       "healthCapability": 0,
+       "system": 0,
+       "alarmsCapability": 1,
+       "controlCapability": 0,
+       "healthMessageCapability": 0,
+       "diagnosisCapability": 0
+      }
+     ],
+     "bCallCapabilities": [
+      {
+       "controlCapability": 1
+      }
+     ],
+     "airConditionCapabilities": [
+      {
+       "maxTemperature": 32,
+       "airConditionAntivirusModeCapability": 3,
+       "enableAutoModeCapability": 3,
+       "supportBlowingModes": [
+        0,
+        1,
+        2,
+        3,
+        4
+       ],
+       "maxAntivirusModeCurrentDuration": 3600,
+       "airConditionMode": 1,
+       "supportTemperatureUnits": [
+        0
+       ],
+       "alarmsCapability": 1,
+       "supportCyclingModes": [
+        0,
+        1,
+        2,
+        3
+       ],
+       "enableRearDefrosterCapability": 0,
+       "blowingModeCapability": 3,
+       "enableAirCleanerCapability": 3,
+       "minTemperature": 18,
+       "enableAirCompressorCapability": 3,
+       "minAirConditionCurrentDuration": 60,
+       "airConditionDurationCapability": 3,
+       "temperatureCapability": 3,
+       "maxWindStrength": 7,
+       "minAntivirusModeCurrentDuration": 60,
+       "minWindStrength": 0,
+       "enableFrontDefrosterCapability": 0,
+       "cyclingModeCapability": 3,
+       "windStrengthCapability": 3,
+       "maxAirConditionCurrentDuration": 3600,
+       "controlCapability": 1,
+       "fragranceCapability": 0,
+       "antivirusModeDurationCapability": 3
+      }
+     ],
+     "sunroofCapabilities": [
+      {
+       "openModeCapability": 0,
+       "raiseCapability": 0,
+       "openPercentageCapability": 0,
+       "raisePercentageCapability": 0,
+       "alarmsCapability": 0,
+       "controlCapability": 0,
+       "supportOpenModes": []
+      }
+     ],
+     "oksCapabilities": [
+      {
+       "controlCapability": 1
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

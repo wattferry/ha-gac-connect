@@ -1,0 +1,44 @@
+{
+  "tyreAccessors": [
+    {
+      "pressureFlag": 1,
+      "temperatureUnit": 0,
+      "temperatureFlag": 1,
+      "alarms": [{"alarmObject": 1, "alarmReason": -1}],
+      "temperature": -1.0,
+      "pressure": -1.0,
+      "tyre": 1,
+      "pressureUnit": 0
+    },
+    {
+      "pressureFlag": 1,
+      "temperatureUnit": 0,
+      "temperatureFlag": 1,
+      "alarms": [{"alarmObject": 2, "alarmReason": -1}],
+      "temperature": -1.0,
+      "pressure": -1.0,
+      "tyre": 2,
+      "pressureUnit": 0
+    },
+    {
+      "pressureFlag": 1,
+      "temperatureUnit": 0,
+      "temperatureFlag": 1,
+      "alarms": [{"alarmObject": 3, "alarmReason": -1}],
+      "temperature": -1.0,
+      "pressure": -1.0,
+      "tyre": 3,
+      "pressureUnit": 0
+    },
+    {
+      "pressureFlag": 1,
+      "temperatureUnit": 0,
+      "temperatureFlag": 1,
+      "alarms": [{"alarmObject": 4, "alarmReason": -1}],
+      "temperature": -1.0,
+      "pressure": -1.0,
+      "tyre": 4,
+      "pressureUnit": 0
+    }
+  ]
+}

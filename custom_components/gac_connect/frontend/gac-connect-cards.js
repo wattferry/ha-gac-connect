@@ -1,0 +1,1 @@
+var o=new URL(`gac-connect-cards-main.js${new URL(import.meta.url).search}`,import.meta.url).href;function n(){if(!document.querySelector("home-assistant")?.hass){window.setTimeout(n,100);return}import(o).catch(t=>console.error("GAC Connect cards could not load",t))}n();

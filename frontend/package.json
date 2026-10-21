@@ -1,0 +1,22 @@
+{
+  "name": "gac-connect-cards",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Dashboard cards for the GAC Connect Home Assistant integration",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && node build.mjs",
+    "demo": "node build.mjs --demo",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lit": "3.3.3"
+  },
+  "devDependencies": {
+    "@fontsource/barlow": "5.3.0",
+    "@fontsource/barlow-condensed": "5.3.0",
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3"
+  }
+}

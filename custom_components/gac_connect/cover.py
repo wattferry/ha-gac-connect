@@ -1,8 +1,7 @@
 """Covers: windows, sunroof and tailgate.
 
-The state is unknown when the car does not report it; open and close still work. Opening is
-exposed because the car supports it, but treat it like any other remote-open: an
-automation that opens the windows will really open them.
+The state is unknown when the car does not report it. Available remote actions
+vary by model; a state reading alone does not confirm opening or closing support.
 """
 from __future__ import annotations
 
@@ -23,7 +22,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GacConfigEntry
 from .coordinator import GacCoordinator
-from .entity import GacEntity
+from .entity_filter import add_configured_entities
+from .transition import GacTransitionEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,10 +47,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: GacConfigEntry, add_entities: AddEntitiesCallback
 ) -> None:
     coordinator = entry.runtime_data.coordinator
-    add_entities(GacCoverEntity(coordinator, d) for d in COVERS)
+    add_configured_entities(entry, add_entities, "cover",
+                            (GacCoverEntity(coordinator, d) for d in COVERS))
 
 
-class GacCoverEntity(GacEntity, CoverEntity):
+class GacCoverEntity(GacTransitionEntity, CoverEntity):
     entity_description: GacCover
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
@@ -65,10 +66,21 @@ class GacCoverEntity(GacEntity, CoverEntity):
         v = self.entity_description.is_open(self.status)
         return None if v is None else not v
 
+    def _reported_state(self) -> bool | None:
+        return self.is_closed
+
+    @property
+    def is_opening(self) -> bool:
+        return self._requested_state is False
+
+    @property
+    def is_closing(self) -> bool:
+        return self._requested_state is True
+
     async def async_open_cover(self, **kwargs: Any) -> None:
-        await self._send(self.coordinator.client.command(self.coordinator.vin, self.entity_description.open_cmd))
-        await self.coordinator.async_request_refresh()
+        command = self.entity_description.open_cmd
+        await self._run_transition(False, command, lambda: self.coordinator.client.command(self.coordinator.vin, command))
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        await self._send(self.coordinator.client.command(self.coordinator.vin, self.entity_description.close_cmd))
-        await self.coordinator.async_request_refresh()
+        command = self.entity_description.close_cmd
+        await self._run_transition(True, command, lambda: self.coordinator.client.command(self.coordinator.vin, command))

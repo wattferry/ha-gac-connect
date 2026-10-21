@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GAC Connect Cards</title>
+<style>
+  :root {
+    --page: #f2f3f1;
+    --ink: #1e2421;
+    --muted: #535b56;
+    --line: rgba(30, 36, 33, 0.18);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --page: #0f1311; --ink: #e4ebe2; --muted: #a4aea7;
+      --line: rgba(228, 235, 226, 0.16); color-scheme: dark; }
+  }
+  :root[data-theme="dark"] {
+    --page: #0f1311; --ink: #e4ebe2; --muted: #a4aea7; --line: rgba(228, 235, 226, 0.16); color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 400 15px/1.4 "Barlow", system-ui, sans-serif; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 16px;
+           border-bottom: 1px solid var(--line); }
+  h1 { margin: 0; font: 700 22px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.05em; text-transform: uppercase; }
+  header p { margin: 0; color: var(--muted); font-size: 14px; flex: 1 1 260px; min-width: 0; }
+  label { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; min-height: 44px; }
+  select { height: 40px; font: inherit; padding: 0 8px; }
+  input[type="checkbox"] { width: 20px; height: 20px; }
+  .car h2 { margin: 20px 0 0; font: 700 18px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--muted); text-align: center; }
+  .columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(var(--col-min, 300px), 100%), min(var(--col-max, 400px), 100%))); justify-content: center;
+         gap: 16px; padding: 16px; align-items: start; }
+  .columns > div { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>GAC Connect cards</h1>
+  <p>Demo with synthetic data: no real car, no Home Assistant. Commands answer after a short pause; locking with the
+    boot open is refused, as a real car would.</p>
+  <label>Car <select id="model">
+    <option>AION V</option><option>GAC M8</option><option>AION UT</option><option>Hyptec HT</option>
+    <option>AION S</option></select></label>
+  <label><input type="checkbox" id="two"> Two cars</label>
+  <label><input type="checkbox" id="dark"> Dark theme</label>
+</header>
+<main id="cars"></main>
+<script type="module" src="./demo.js"></script>
+</body>
+</html>
